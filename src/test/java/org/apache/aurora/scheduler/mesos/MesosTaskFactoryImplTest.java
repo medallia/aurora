@@ -21,6 +21,7 @@ import com.twitter.common.quantity.Data;
 import org.apache.aurora.gen.AssignedTask;
 import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.DockerContainer;
+import org.apache.aurora.gen.DockerParameter;
 import org.apache.aurora.gen.Identity;
 import org.apache.aurora.gen.JobKey;
 import org.apache.aurora.gen.MesosContainer;
@@ -35,6 +36,7 @@ import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
+import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskInfo;
@@ -67,7 +69,9 @@ public class MesosTaskFactoryImplTest {
   private static final IAssignedTask TASK_WITH_DOCKER = IAssignedTask.build(TASK.newBuilder()
       .setTask(
           new TaskConfig(TASK.getTask().newBuilder())
-              .setContainer(Container.docker(new DockerContainer("testimage")))));
+              .setContainer(Container.docker(
+                  new DockerContainer("testimage").setParameters(
+                      ImmutableList.of(new DockerParameter("label", "testparameter")))))));
 
   private static final SlaveID SLAVE = SlaveID.newBuilder().setValue("slave-id").build();
 
@@ -168,8 +172,9 @@ public class MesosTaskFactoryImplTest {
 
   @Test
   public void testDockerContainer() {
-    TaskInfo task = getDockerTaskInfo();
-    assertEquals("testimage", task.getExecutor().getContainer().getDocker().getImage());
+    final DockerInfo docker = getDockerTaskInfo().getExecutor().getContainer().getDocker();
+    assertEquals("testimage", docker.getImage());
+    assertEquals("testparameter", docker.getParameters(0).getValue());
   }
 
   @Test(expected = NullPointerException.class)

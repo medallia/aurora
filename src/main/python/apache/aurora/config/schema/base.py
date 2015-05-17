@@ -65,9 +65,13 @@ class MesosTaskInstance(Struct):
   environment                = Required(String)
   health_check_config        = Default(HealthCheckConfig, HealthCheckConfig())
 
+class Parameter(Struct):
+  name = Required(String)
+  value = Required(String)
 
 class Docker(Struct):
   image = Required(String)
+  parameters = List(Parameter)
 
 
 class Container(Struct):

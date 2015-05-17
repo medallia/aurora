@@ -411,10 +411,17 @@ Describes the container the job's processes will run inside.
 
 ### Docker Object
 
-  param          | type           | description
-  -----          | :----:         | -----------
-  ```image```    | String         | The name of the docker image to execute.  If the image does not exist locally it will be pulled with ```docker pull```.
+  param            | type            | description
+  -----            | :----:          | -----------
+  ```image```      | String          | The name of the docker image to execute.  If the image does not exist locally it will be pulled with ```docker pull```.
+  ```parameters``` | List(Parameter) | Additional parameters to pass to the docker containerizer.
 
+### Docker Parameter Object
+
+  param            | type            | description
+  -----            | :----:          | -----------
+  ```name```       | String          | The name of the docker parameter. E.g. volume
+  ```value```      | String          | The value of the parameter. E.g. /usr/local/bin:/usr/bin:rw
 
 Specifying Scheduling Constraints
 =================================
