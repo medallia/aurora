@@ -382,7 +382,7 @@ Job Schema
   ```container``` | ```Container``` object | An optional container to run all processes inside of.
   ```lifecycle``` | ```LifecycleConfig``` object | An optional task lifecycle configuration that dictates commands to be executed on startup/teardown.  HTTP lifecycle is enabled by default if the "health" port is requested.  See [LifecycleConfig Objects](#lifecycleconfig-objects) for more information.
   ```tier``` | String | Task tier type. When set to `revocable` requires the task to run with Mesos revocable resources. This is work [in progress](https://issues.apache.org/jira/browse/AURORA-1343) and is currently only supported for the revocable tasks. The ultimate goal is to simplify task configuration by hiding various configuration knobs behind a task tier definition. See AURORA-1343 and AURORA-1443 for more details.
-
+  ```instance_variables``` | List(Instance) | A list of instances containing variable values to use in Docker Parameters or process cmdline.
 ### Services
 
 Jobs with the `service` flag set to True are called Services. The `Service`
@@ -537,6 +537,19 @@ See [Docker Command Line Reference](https://docs.docker.com/reference/commandlin
   ```port```     | String          | The named port to send POST commands (Default: health)
   ```graceful_shutdown_endpoint``` | String | Endpoint to hit to indicate that a task should gracefully shutdown. (Default: /quitquitquit)
   ```shutdown_endpoint``` | String | Endpoint to hit to give a task its final warning before being killed. (Default: /abortabortabort)
+
+### Instance Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```variables``` | List(Variable)  | A list of Variables for this Instance
+
+### Variable Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```name```      | String          | The name of the variable
+  ```value```     | String          | The value to replace in a Instance Docker Parameters
 
 #### graceful_shutdown_endpoint
 

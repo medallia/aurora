@@ -25,8 +25,10 @@ import org.apache.aurora.gen.AssignedTask;
 import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.DockerContainer;
 import org.apache.aurora.gen.DockerParameter;
+import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.MesosContainer;
 import org.apache.aurora.gen.TaskConfig;
+import org.apache.aurora.gen.Variable;
 import org.apache.aurora.scheduler.ResourceSlot;
 import org.apache.aurora.scheduler.ResourceType;
 import org.apache.aurora.scheduler.Resources;
@@ -67,6 +69,11 @@ public class MesosTaskFactoryImplTest extends EasyMockTest {
   private static final ITaskConfig TASK_CONFIG = ITaskConfig.build(
       TaskTestUtil.makeConfig(TaskTestUtil.JOB)
           .newBuilder()
+          .setInstances(ImmutableList.of(
+                  new Instance(ImmutableList.of(new Variable("foo", "1"))),
+                  new Instance(ImmutableList.of(new Variable("foo", "2"))),
+                  new Instance(ImmutableList.of(new Variable("foo", "3")))
+          ))
           .setContainer(Container.mesos(new MesosContainer())));
   private static final IAssignedTask TASK = IAssignedTask.build(new AssignedTask()
       .setInstanceId(2)

@@ -26,6 +26,7 @@ import org.apache.aurora.gen.DockerContainer;
 import org.apache.aurora.gen.DockerParameter;
 import org.apache.aurora.gen.ExecutorConfig;
 import org.apache.aurora.gen.Identity;
+import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.LimitConstraint;
 import org.apache.aurora.gen.Metadata;
 import org.apache.aurora.gen.ScheduleStatus;
@@ -34,6 +35,7 @@ import org.apache.aurora.gen.TaskConfig;
 import org.apache.aurora.gen.TaskConstraint;
 import org.apache.aurora.gen.TaskEvent;
 import org.apache.aurora.gen.ValueConstraint;
+import org.apache.aurora.gen.Variable;
 import org.apache.aurora.scheduler.TierInfo;
 import org.apache.aurora.scheduler.configuration.ConfigurationManager;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
@@ -84,6 +86,7 @@ public final class TaskTestUtil {
         .setContactEmail("foo@bar.com")
         .setMetadata(ImmutableSet.of(new Metadata("key", "value")))
         .setExecutorConfig(new ExecutorConfig("name", "config"))
+        .setInstances(ImmutableList.of(new Instance(ImmutableList.of(new Variable("foo", "bar")))))
         .setContainer(Container.docker(
             new DockerContainer("imagename")
                 .setParameters(ImmutableList.of(

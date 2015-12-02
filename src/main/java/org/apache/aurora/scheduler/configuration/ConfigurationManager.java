@@ -38,6 +38,7 @@ import org.apache.aurora.scheduler.base.UserProvidedStrings;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IContainer;
 import org.apache.aurora.scheduler.storage.entities.IIdentity;
+import org.apache.aurora.scheduler.storage.entities.IInstance;
 import org.apache.aurora.scheduler.storage.entities.IJobConfiguration;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.aurora.scheduler.storage.entities.ITaskConstraint;
@@ -170,11 +171,25 @@ public class ConfigurationManager {
       throw new TaskDescriptionException("Job configuration must have taskConfig set.");
     }
 
-    if (job.getInstanceCount() <= 0) {
-      throw new TaskDescriptionException("Instance count must be positive.");
-    }
-
     JobConfiguration builder = job.newBuilder();
+    
+    if (job.getInstanceCount() < 0) {
+      throw new TaskDescriptionException("Instance count must be positive.");
+    } else {
+      ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+      if (!instances.isEmpty()) {
+        if (job.getInstanceCount() == 0) { // replace the default instanceCount
+          builder.setInstanceCount(instances.size());
+        } else if (job.getInstanceCount() != instances.size()) { 
+          // specified instanceCount must match # instances
+          throw new TaskDescriptionException(String.format(
+                  "Job instanceCount %s doesn't match number of instances %s", 
+                  job.getInstanceCount(), instances.size()));
+        }
+      } else if (job.getInstanceCount() == 0) {
+          builder.setInstanceCount(1);
+      }
+    }
 
     if (!JobKeys.isValid(job.getKey())) {
       throw new TaskDescriptionException("Job key " + job.getKey() + " is invalid.");
@@ -281,6 +296,7 @@ public class ConfigurationManager {
             "Only " + dedicatedRole + " may use hosts dedicated for that role.");
       }
     }
+    InstanceVariablesSubstitutor.validate(config);
 
     Optional<Container._Fields> containerType;
     if (config.isSetContainer()) {

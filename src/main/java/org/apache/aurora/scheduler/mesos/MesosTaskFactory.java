@@ -18,6 +18,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
@@ -32,12 +33,14 @@ import org.apache.aurora.scheduler.TierManager;
 import org.apache.aurora.scheduler.base.JobKeys;
 import org.apache.aurora.scheduler.base.SchedulerException;
 import org.apache.aurora.scheduler.base.Tasks;
+import org.apache.aurora.scheduler.configuration.InstanceVariablesSubstitutor;
 import org.apache.aurora.scheduler.configuration.executor.ExecutorSettings;
 import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
 import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
@@ -152,6 +155,7 @@ public interface MesosTaskFactory {
         configureTaskForNoContainer(task, config, taskBuilder, acceptedOffer);
       } else if (config.getContainer().isSetDocker()) {
         configureTaskForDockerContainer(task, config, taskBuilder, acceptedOffer);
+        return taskBuilder.build();
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
@@ -173,11 +177,15 @@ public interface MesosTaskFactory {
         ITaskConfig taskConfig,
         TaskInfo.Builder taskBuilder,
         AcceptedOffer acceptedOffer) {
-
+      LOG.info("Setting DOCKER Task. {}", taskConfig.getExecutorConfig().getData());
+      LOG.info("Instance. {}", taskConfig.getInstances());
+      
+      // build variable substitutor.
+      InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(task.getTask(),
+              task.getInstanceId());
+      
       IDockerContainer config = taskConfig.getContainer().getDocker();
-      Iterable<Protos.Parameter> parameters = Iterables.transform(config.getParameters(),
-          item -> Protos.Parameter.newBuilder().setKey(item.getName())
-            .setValue(item.getValue()).build());
+      Iterable<Protos.Parameter> parameters = instanceVariablesSubstitutor.getDockerParameters();
 
       ContainerInfo.DockerInfo.Builder dockerBuilder = ContainerInfo.DockerInfo.newBuilder()
           .setImage(config.getImage()).addAllParameters(parameters);
@@ -185,15 +193,30 @@ public interface MesosTaskFactory {
           .setType(ContainerInfo.Type.DOCKER)
           .setDocker(dockerBuilder.build());
 
-      configureContainerVolumes(containerBuilder);
+      Protos.Environment.Builder envBuilder = Protos.Environment.newBuilder();
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_ID")
+              .setValue(task.getTaskId()).build());
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_INSTANCE")
+              .setValue(Integer.toString(task.getInstanceId())).build());
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_JOB_NAME")
+              .setValue(task.getTask().getJobName()).build());
 
-      ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, taskConfig, acceptedOffer)
-          .setContainer(containerBuilder.build());
-
-      taskBuilder.setExecutor(execBuilder.build());
+      taskBuilder.setContainer(containerBuilder.build()); 
+      
+      CommandInfo.Builder cmd = CommandInfo.newBuilder();
+      String command = instanceVariablesSubstitutor.getCmdLine();
+      LOG.info("Using CMD: {}", command);
+      cmd.addUris(CommandInfo.URI.newBuilder().setValue("file:///root/.dockercfg").build());
+      if (!Strings.isNullOrEmpty(command)) {
+        cmd.setValue(command).setShell(true);  
+      } else {
+        cmd.setShell(false); // if no cmdline present, just run the docker entrypoint.
+      }
+      cmd.setEnvironment(envBuilder.build());
+      taskBuilder.setCommand(cmd.build());
     }
-
-    private ExecutorInfo.Builder configureTaskForExecutor(
+    
+   private ExecutorInfo.Builder configureTaskForExecutor(
         IAssignedTask task,
         ITaskConfig config,
         AcceptedOffer acceptedOffer) {

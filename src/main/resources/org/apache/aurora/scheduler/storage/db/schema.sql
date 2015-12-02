@@ -171,6 +171,18 @@ CREATE TABLE task_config_docker_container_parameters(
   value VARCHAR NOT NULL
 );
 
+CREATE TABLE task_config_instances(
+  id IDENTITY,
+  task_config_id BIGINT NOT NULL REFERENCES task_configs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE task_config_instances_variables(
+  id IDENTITY,
+  instance_id BIGINT NOT NULL REFERENCES task_config_instances(id) ON DELETE CASCADE,
+  name VARCHAR NOT NULL,
+  value VARCHAR NOT NULL
+);
+
 CREATE TABLE task_states(
   id INT PRIMARY KEY,
   name VARCHAR NOT NULL,

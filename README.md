@@ -9,7 +9,43 @@ running in a cluster, such as rolling upgrades.
 To very concisely describe Aurora, it is like a distributed monit or distributed supervisord that
 you can instruct to do things like _run 100 of these, somewhere, forever_.
 
+## Medallia Features
 
+* Jobs using Docker containerizer doesn't use thermos-executor:
+  - Removes the requirement of having Python in the Docker Image.
+  - Use Docker image default CMD if the process cmdline is empty.
+* Different Instances of a Job can have different Docker Parameters. 
+  - Each `Instance` has a list `variables` whose elements are name-value pairs
+    that are used to parameterize different tasks instances. 
+  - For example, the following configuration will spawn three 
+    instances of the myService job assigning different values to the ip-address and volume Docker 
+    parameters for each instance. The `instances` attribute is optional and is infered from the 
+    number of `instance_variables`. 
+     
+```python
+       Service(cluster       = 'myCluster',
+          role               = 'myRole',
+          environment        = 'devel',
+          name               = 'myService',
+          task               =  hello_world_task,
+          instance_variables = [
+               Instance(variables=[
+                  Variable(name="ip", value="10.1.1.1"),
+                  Variable(name="vol", value="vol-A")]),
+               Instance(variables=[
+                  Variable(name="ip", value="10.1.1.2"),
+                  Variable(name="vol", value="vol-B")]),
+               Instance(variables=[
+                  Variable(name="ip", value="10.1.1.3"),
+                  Variable(name="vol", value="vol-C")])
+               ],
+          container =
+            Container(docker = Docker(image = "python:2.7", parameters=[
+	            Parameter(name="ip-address", "#{ip}"),
+	            Parameter(name="volume", "#{vol}/foo:ceph")
+            ])))]
+```
+  
 ## Features
 
 Aurora is built for users _and_ operators.
