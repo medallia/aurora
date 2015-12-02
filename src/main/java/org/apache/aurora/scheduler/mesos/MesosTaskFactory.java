@@ -13,20 +13,29 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 
 import org.apache.aurora.Protobufs;
 import org.apache.aurora.codec.ThriftBinaryCodec;
+import org.apache.aurora.gen.DockerParameter;
 import org.apache.aurora.scheduler.ResourceSlot;
 import org.apache.aurora.scheduler.TierManager;
 import org.apache.aurora.scheduler.base.JobKeys;
@@ -38,6 +47,7 @@ import org.apache.aurora.scheduler.storage.entities.IDockerParameter;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
@@ -45,6 +55,9 @@ import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import static java.util.Objects.requireNonNull;
 
@@ -133,6 +146,7 @@ public interface MesosTaskFactory {
         configureTaskForNoContainer(task, config, taskBuilder);
       } else if (config.getContainer().isSetDocker()) {
         configureTaskForDockerContainer(task, config, taskBuilder);
+        return taskBuilder.build();
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
@@ -152,7 +166,7 @@ public interface MesosTaskFactory {
         IAssignedTask task,
         ITaskConfig taskConfig,
         TaskInfo.Builder taskBuilder) {
-
+      LOG.info(String.format("Setting DOCKER Task. %s", taskConfig.getExecutorConfig().getData()));
       IDockerContainer config = taskConfig.getContainer().getDocker();
       Iterable<Protos.Parameter> parameters = Iterables.transform(config.getParameters(),
           new Function<IDockerParameter, Protos.Parameter>() {
@@ -168,14 +182,44 @@ public interface MesosTaskFactory {
           .setType(ContainerInfo.Type.DOCKER)
           .setDocker(dockerBuilder.build());
 
-      configureContainerVolumes(containerBuilder);
+      Protos.Environment.Builder envBuilder = Protos.Environment.newBuilder();
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_ID").setValue(task.getTaskId()).build());
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_INSTANCE").setValue(Integer.toString(task.getInstanceId())).build());
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_JOB_NAME").setValue(task.getTask().getJobName()).build());
 
-      ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, taskConfig)
-          .setContainer(containerBuilder.build());
-
-      taskBuilder.setExecutor(execBuilder.build());
+      taskBuilder.setContainer(containerBuilder.build()); 
+      
+      CommandInfo.Builder cmd = CommandInfo.newBuilder();
+      String command = getCmdLine(taskConfig.getExecutorConfig().getData());
+      LOG.info(String.format("Using CMD: %s", command));
+      cmd.addUris(CommandInfo.URI.newBuilder().setValue("file:///root/.dockercfg").build());
+      cmd.setValue(command).setShell(true).setEnvironment(envBuilder.build());
+      taskBuilder.setCommand(cmd.build());
     }
 
+    public static void main(String... args) {
+      String in = "{\"environment\": \"devel\", \"health_check_config\": {\"initial_interval_secs\": 15.0, \"endpoint\": \"/health\", \"expected_response_code\": 0, \"expected_response\": \"ok\", \"max_consecutive_failures\": 0, \"timeout_secs\": 1.0, \"interval_secs\": 10.0}, \"container\": {\"docker\": {\"image\": \"sleepy\", \"parameters\": []}}, \"name\": \"h\", \"service\": true, \"max_task_failures\": 1, \"cron_collision_policy\": \"KILL_EXISTING\", \"enable_hooks\": false, \"cluster\": \"devcluster\", \"task\": {\"processes\": [{\"daemon\": false, \"name\": \"hello_process\", \"ephemeral\": false, \"max_failures\": 1, \"min_duration\": 5, \"cmdline\": \"echo foo!\", \"final\": false}], \"name\": \"hello docker\", \"finalization_wait\": 30, \"max_failures\": 1, \"max_concurrency\": 0, \"resources\": {\"disk\": 8388608, \"ram\": 104857600, \"cpu\": 1.0}, \"constraints\": []}, \"production\": false, \"role\": \"d\", \"lifecycle\": {\"http\": {\"graceful_shutdown_endpoint\": \"/quitquitquit\", \"port\": \"health\", \"shutdown_endpoint\": \"/abortabortabort\"}}, \"priority\": 0}";
+      System.out.println(getCmdLine(in));
+    }
+    
+    private static String getCmdLine(String executorConfig) {
+      JsonFactory factory = new JsonFactory(); 
+      ObjectMapper mapper = new ObjectMapper(factory); 
+      TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};
+
+      HashMap<String,Object> o = null;
+      try {
+        o = mapper.readValue(executorConfig, typeRef);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> task = (Map<String, Object>) ((List) ((HashMap) o.get("task")).get("processes")).get(0);
+        String cmdLine = (String) task.get("cmdline");
+        return cmdLine;
+      } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+      }
+    }
+    
     private ExecutorInfo.Builder configureTaskForExecutor(
         IAssignedTask task,
         ITaskConfig config) {
