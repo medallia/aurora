@@ -113,10 +113,16 @@ class Parameter(Struct):
   name = Required(String)
   value = Required(String)
 
+class Variable(Struct):
+  name = String
+  value = String
+
+class Instance(Struct):
+  variables = Default(List(Variable), [])
+  
 class Docker(Struct):
   image = Required(String)
   parameters = Default(List(Parameter), [])
-
 
 class Container(Struct):
   docker = Docker
@@ -128,7 +134,7 @@ class MesosJob(Struct):
   contact       = String
   cluster       = Required(String)
   environment   = Required(String)
-  instances     = Default(Integer, 1)
+  instances     = Default(Integer, 0)
   task          = Required(Task)
   announce      = Announcer
   tier          = String
@@ -147,6 +153,7 @@ class MesosJob(Struct):
   # TODO(wickman) Make Default(Any, LifecycleConfig()) once pystachio #17 is addressed.
   lifecycle                  = Default(LifecycleConfig, DefaultLifecycleConfig)
   task_links                 = Map(String, String)  # Unsupported.  See AURORA-739
+  instance_variables         = Default(List(Instance), [])
 
   enable_hooks = Default(Boolean, False)  # enable client API hooks; from env python-list 'hooks'
 

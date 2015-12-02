@@ -188,6 +188,17 @@ struct DockerParameter {
   2: string value
 }
 
+/** Describes a variable to be interpolated in the configuration of a task instance. */ 
+struct Variable {
+	1: string name
+	2: string value
+}
+
+/** Describes a task instance that contains variables to be interpolated in the parameterized configuration. */
+struct Instance {
+	1: list<Variable> variables
+}
+
 /** Describes a docker container */
 struct DockerContainer {
   /** The container image to be run */
@@ -234,7 +245,9 @@ struct TaskConfig {
  25: optional ExecutorConfig executorConfig
  /** Used to display additional details in the UI. */
  27: optional set<Metadata> metadata
-
+ /** Instances with variables to Interpolate in the TaskConfig */
+ 31: optional list<Instance> instances
+ 
  // This field is deliberately placed at the end to work around a bug in the immutable wrapper
  // code generator.  See AURORA-1185 for details.
  /** the container the task should use to execute */
