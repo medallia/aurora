@@ -13,7 +13,10 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +40,7 @@ import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
@@ -44,6 +48,9 @@ import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import static java.util.Objects.requireNonNull;
 
@@ -132,6 +139,7 @@ public interface MesosTaskFactory {
         configureTaskForNoContainer(task, config, taskBuilder);
       } else if (config.getContainer().isSetDocker()) {
         configureTaskForDockerContainer(task, config, taskBuilder);
+        return taskBuilder.build();
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
@@ -151,7 +159,7 @@ public interface MesosTaskFactory {
         IAssignedTask task,
         ITaskConfig taskConfig,
         TaskInfo.Builder taskBuilder) {
-
+      LOG.info(String.format("Setting DOCKER Task. %s", taskConfig.getExecutorConfig().getData()));
       IDockerContainer config = taskConfig.getContainer().getDocker();
       Iterable<Protos.Parameter> parameters = Iterables.transform(config.getParameters(),
           item -> Protos.Parameter.newBuilder().setKey(item.getName())
@@ -163,14 +171,38 @@ public interface MesosTaskFactory {
           .setType(ContainerInfo.Type.DOCKER)
           .setDocker(dockerBuilder.build());
 
-      configureContainerVolumes(containerBuilder);
+      Protos.Environment.Builder envBuilder = Protos.Environment.newBuilder();
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_ID").setValue(task.getTaskId()).build());
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_INSTANCE").setValue(Integer.toString(task.getInstanceId())).build());
+      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_JOB_NAME").setValue(task.getTask().getJobName()).build());
 
-      ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, taskConfig)
-          .setContainer(containerBuilder.build());
-
-      taskBuilder.setExecutor(execBuilder.build());
+      taskBuilder.setContainer(containerBuilder.build()); 
+      
+      CommandInfo.Builder cmd = CommandInfo.newBuilder();
+      String command = getCmdLine(taskConfig.getExecutorConfig().getData());
+      LOG.info(String.format("Using CMD: %s", command));
+      cmd.addUris(CommandInfo.URI.newBuilder().setValue("file:///root/.dockercfg").build());
+      cmd.setValue(command).setShell(true).setEnvironment(envBuilder.build());
+      taskBuilder.setCommand(cmd.build());
     }
 
+    private static String getCmdLine(String executorConfig) {
+      JsonFactory factory = new JsonFactory(); 
+      ObjectMapper mapper = new ObjectMapper(factory); 
+      TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};
+
+      try {
+        HashMap<String,Object> o = mapper.readValue(executorConfig, typeRef);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> task = (Map<String, Object>) ((List) ((HashMap) o.get("task")).get("processes")).get(0);
+        String cmdLine = (String) task.get("cmdline");
+        return cmdLine;
+      } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+      }
+    }
+    
     private ExecutorInfo.Builder configureTaskForExecutor(
         IAssignedTask task,
         ITaskConfig config) {
