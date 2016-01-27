@@ -611,9 +611,9 @@ for values such as `cluster`s.
 
     production_resources = Resources(cpu = 1.0, ram = 512 * MB, disk = 2 * GB)
     staging_resources = Resources(cpu = 0.1, ram = 32 * MB, disk = 512 * MB)
-    hello_world_template = hello_world(
-        name = "hello_world-{{cluster}}"
-        task = hello_world(resources=production_resources))
+    hello_world_template = hello_world_job(
+        name = "hello_world-{{cluster}}",
+        task = hello_world_task(resources=production_resources))
 
     jobs = [
       # production jobs
@@ -624,7 +624,7 @@ for values such as `cluster`s.
       hello_world_template(
         cluster = 'local',
         instances = 1,
-        task = hello_world(resources=staging_resources)),
+        task = hello_world_task(resources=staging_resources)),
     ]
 
 Then issue the following commands to create and kill the job, using your own values for the job key
