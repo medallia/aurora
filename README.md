@@ -14,13 +14,13 @@ you can instruct to do things like _run 100 of these, somewhere, forever_.
 * Jobs using Docker containerizer doesn't use thermos-executor:
   - Removes the requirement of having Python in the Docker Image.
   - Use Docker image default CMD if the process cmdline is empty.
-* Different Instances of a Job can have different Docker Parameters. 
+* Different Instances of a Job can have different Docker Parameters.
   - Each `Instance` has a list `variables` whose elements are name-value pairs
-    that are used to parameterize different tasks instances. 
-  - For example, the following configuration will spawn three 
-    instances of the myService job assigning different values to the ip-address and volume Docker 
-    parameters for each instance. The `instances` attribute is optional and is infered from the 
-    number of `instance_variables`. 
+    that are used to parameterize different tasks instances.
+  - For example, the following configuration will spawn three
+    instances of the myService job assigning different values to the ip-address and volume Docker
+    parameters for each instance. The `instances` attribute value must match the number of
+    `instance_variables`. 
      
 ```python
        Service(cluster       = 'myCluster',

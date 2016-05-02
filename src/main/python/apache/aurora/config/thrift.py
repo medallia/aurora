@@ -231,17 +231,10 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
 
   numberOfInstances = fully_interpolated(job.instances())
   numberOfConfig = len(fully_interpolated(job.instance_variables()))
-  if numberOfConfig > 0:
-    if numberOfInstances != numberOfConfig:
-      if numberOfInstances == 0:
-        numberOfInstances = numberOfConfig
-      else:
-        raise InvalidConfig(("instances value %s doesn't match the number of "
-                            + "instance_variables definitions %s."
-                            + " The instances field can be ommited wi") % (numberOfInstances,
-                                                                         numberOfConfig))
-  elif numberOfInstances == 0:
-    numberOfInstances = 1
+  if numberOfConfig > 0 and numberOfInstances != numberOfConfig:
+    raise InvalidConfig(("instances value %s doesn't match the number of "
+                        + "instance_variables definitions %s.") % (numberOfInstances,
+                                                                     numberOfConfig))
 
   instances = list()
   for pinstance in fully_interpolated(job.instance_variables()):
