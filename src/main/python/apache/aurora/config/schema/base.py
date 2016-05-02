@@ -134,7 +134,7 @@ class MesosJob(Struct):
   contact       = String
   cluster       = Required(String)
   environment   = Required(String)
-  instances     = Default(Integer, 0)
+  instances     = Default(Integer, 1)
   task          = Required(Task)
   announce      = Announcer
   tier          = String

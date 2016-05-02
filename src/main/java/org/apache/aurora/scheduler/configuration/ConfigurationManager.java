@@ -171,24 +171,18 @@ public class ConfigurationManager {
       throw new TaskDescriptionException("Job configuration must have taskConfig set.");
     }
 
-    JobConfiguration builder = job.newBuilder();
-    
-    if (job.getInstanceCount() < 0) {
+    if (job.getInstanceCount() <= 0) {
       throw new TaskDescriptionException("Instance count must be positive.");
-    } else {
-      ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
-      if (!instances.isEmpty()) {
-        if (job.getInstanceCount() == 0) { // replace the default instanceCount
-          builder.setInstanceCount(instances.size());
-        } else if (job.getInstanceCount() != instances.size()) { 
-          // specified instanceCount must match # instances
-          throw new TaskDescriptionException(String.format(
-                  "Job instanceCount %s doesn't match number of instances %s", 
-                  job.getInstanceCount(), instances.size()));
-        }
-      } else if (job.getInstanceCount() == 0) {
-          builder.setInstanceCount(1);
-      }
+    }
+
+    JobConfiguration builder = job.newBuilder();
+
+    ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+    if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
+        // specified instanceCount must match number of instances
+        throw new TaskDescriptionException(String.format(
+                "Job instanceCount %s doesn't match number of instances %s",
+                job.getInstanceCount(), instances.size()));
     }
 
     if (!JobKeys.isValid(job.getKey())) {
