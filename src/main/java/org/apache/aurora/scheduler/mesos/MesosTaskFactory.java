@@ -13,18 +13,11 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
-
 import org.apache.aurora.GuavaUtils;
 import org.apache.aurora.Protobufs;
 import org.apache.aurora.codec.ThriftBinaryCodec;
@@ -37,27 +30,16 @@ import org.apache.aurora.scheduler.configuration.executor.ExecutorSettings;
 import org.apache.aurora.scheduler.resources.AcceptedOffer;
 import org.apache.aurora.scheduler.resources.ResourceSlot;
 import org.apache.aurora.scheduler.resources.Resources;
-import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
-import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
-import org.apache.aurora.scheduler.storage.entities.IJobKey;
-import org.apache.aurora.scheduler.storage.entities.IMetadata;
-import org.apache.aurora.scheduler.storage.entities.IServerInfo;
-import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
+import org.apache.aurora.scheduler.storage.entities.*;
 import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.CommandInfo;
-import org.apache.mesos.Protos.ContainerInfo;
-import org.apache.mesos.Protos.DiscoveryInfo;
-import org.apache.mesos.Protos.ExecutorID;
-import org.apache.mesos.Protos.ExecutorInfo;
-import org.apache.mesos.Protos.Label;
-import org.apache.mesos.Protos.Labels;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Port;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -236,7 +218,7 @@ public interface MesosTaskFactory {
       envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_INSTANCE")
               .setValue(Integer.toString(task.getInstanceId())).build());
       envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_JOB_NAME")
-              .setValue(task.getTask().getJobName()).build());
+              .setValue(task.getTask().getJob().getName()).build());
 
       taskBuilder.setContainer(containerBuilder.build());
 
