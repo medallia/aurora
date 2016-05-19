@@ -22,20 +22,6 @@ readonly IP_ADDRESS=192.168.33.7
 
 function prepare_extras() {
   pushd aurora
-    # Fetch the mesos egg, needed to build python components.
-    # The mesos.native target in 3rdparty/python/BUILD expects to find the native egg in third_party.
-    mkdir -p third_party
-    pushd third_party
-      wget -c https://svn.apache.org/repos/asf/aurora/3rdparty/ubuntu/trusty64/python/mesos.native-${MESOS_VERSION}-py2.7-linux-x86_64.egg
-    popd
-
-    # Install thrift, needed for code generation in the scheduler build.
-    curl -sSL http://apache.org/dist/thrift/KEYS | gpg --import -
-    gpg --export --armor 66B778F9 | sudo apt-key add -
-    echo 'deb http://www.apache.org/dist/thrift/debian 0.9.1 main' > /etc/apt/sources.list.d/thrift.list
-    apt-get update
-    apt-get install thrift-compiler=0.9.1
-
     # Include build script in default PATH.
     ln -sf /home/vagrant/aurora/examples/vagrant/aurorabuild.sh /usr/local/bin/aurorabuild
   popd
@@ -48,7 +34,6 @@ function install_cluster_config {
 
 function install_ssh_config {
   cat >> /etc/ssh/ssh_config <<EOF
-
 # Allow local ssh w/out strict host checking
 Host *
     StrictHostKeyChecking no
