@@ -203,7 +203,7 @@
       tlc.value AS constraint_l_limit,
       tvc.id AS constraint_v_id,
       tvc.negated AS constraint_v_negated,
-      tvcv.value as constraint_v_v_value
+      tvcv.value as constraint_v_v_value,
       i.id AS i_id
     FROM task_configs AS c
     INNER JOIN job_keys AS j ON j.id = c.job_key_id
