@@ -41,8 +41,8 @@ you can instruct to do things like _run 100 of these, somewhere, forever_.
                ],
           container =
             Container(docker = Docker(image = "python:2.7", parameters=[
-	            Parameter(name="ip-address", "#{ip}"),
-	            Parameter(name="volume", "#{vol}/foo:ceph")
+	            Parameter(name="ip-address", value="#{ip}"),
+	            Parameter(name="volume", value="#{vol}/foo:ceph")
             ])))]
 ```
   
