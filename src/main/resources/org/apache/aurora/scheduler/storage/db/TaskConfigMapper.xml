@@ -101,7 +101,6 @@
       column="id"
       foreignColumn="instance_id"/>
   </resultMap>
-
   
   <resultMap id="VariableMapper" type="org.apache.aurora.gen.Variable">
     <id column="id"/>
@@ -115,7 +114,6 @@
     FROM task_config_instances_variables
     WHERE instance_id = #{id}
   </select>
-
   
   <select id="selectInstances" resultMap="InstanceMapper">
     SELECT
@@ -228,7 +226,7 @@
       AND j.environment = #{environment}
       AND j.name = #{name}
   </select>
-
+  
   <insert id="insertConstraint" useGeneratedKeys="true" keyColumn="id" keyProperty="result.id">
     INSERT INTO task_constraints (
       task_config_id,
