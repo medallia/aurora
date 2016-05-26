@@ -90,6 +90,8 @@ EOF
   chmod +x /usr/local/bin/update-sources
   update-sources > /dev/null
   chown -R vagrant:vagrant /home/vagrant
+  echo "60mins">/etc/mesos-slave/executor_registration_timeout
+  echo "{}" > /root/.dockercfg
 }
 
 prepare_sources
