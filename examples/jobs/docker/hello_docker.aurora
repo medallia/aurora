@@ -17,7 +17,7 @@ hello_world_proc = Process(
     cmdline="""
 while true; do
     echo -n "Hello world! The time is now: " && date
-    sleep 1000
+    sleep 10
 done
 """)
 
@@ -26,11 +26,10 @@ hello_world_docker = Task(
   processes = [hello_world_proc],
   resources = Resources(cpu = 1, ram = 1*MB, disk=8*MB))
 
-p = [Parameter(name="label", value="instance${instance}")]
 jobs = [
   Service(cluster = 'devcluster',
           environment = 'devel',
           role = 'docker-test',
           name = 'hello_docker',
           task = hello_world_docker,
-          container = Container(docker = Docker(image = 'python:2.7', parameters=p)))]
+          container = Container(docker = Docker(image = 'python:2.7')))]
