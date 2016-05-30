@@ -39,6 +39,8 @@ import org.apache.aurora.scheduler.base.JobKeys;
 import org.apache.aurora.scheduler.base.UserProvidedStrings;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IContainer;
+import org.apache.aurora.scheduler.storage.entities.IIdentity;
+import org.apache.aurora.scheduler.storage.entities.IInstance;
 import org.apache.aurora.scheduler.storage.entities.IJobConfiguration;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.aurora.scheduler.storage.entities.ITaskConstraint;
@@ -171,6 +173,14 @@ public class ConfigurationManager {
 
     JobConfiguration builder = job.newBuilder();
 
+    ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+    if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
+        // specified instanceCount must match number of instances
+        throw new TaskDescriptionException(String.format(
+                "Job instanceCount %s doesn't match number of instances %s",
+                job.getInstanceCount(), instances.size()));
+    }
+
     if (!JobKeys.isValid(job.getKey())) {
       throw new TaskDescriptionException("Job key " + job.getKey() + " is invalid.");
     }
@@ -264,6 +274,7 @@ public class ConfigurationManager {
             "Only " + dedicatedRole + " may use hosts dedicated for that role.");
       }
     }
+    InstanceVariablesSubstitutor.validate(config);
 
     Optional<Container._Fields> containerType;
     if (config.isSetContainer()) {

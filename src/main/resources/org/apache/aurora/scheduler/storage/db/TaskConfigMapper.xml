@@ -94,6 +94,35 @@
     WHERE container_id = #{id}
   </select>
 
+  <resultMap id="InstanceMapper" type="org.apache.aurora.gen.Instance">
+    <collection
+      property="variables"
+      select="selectInstanceVariables"
+      column="id"
+      foreignColumn="instance_id"/>
+  </resultMap>
+  
+  <resultMap id="VariableMapper" type="org.apache.aurora.gen.Variable">
+    <id column="id"/>
+  </resultMap>
+
+  <select id="selectInstanceVariables" resultMap="VariableMapper">
+    SELECT
+      id,
+      name,
+      value
+    FROM task_config_instances_variables
+    WHERE instance_id = #{id}
+  </select>
+  
+  <select id="selectInstances" resultMap="InstanceMapper">
+    SELECT
+      id
+    FROM task_config_instances
+    WHERE task_config_id = #{id}
+    ORDER BY id asc
+  </select>
+ 
   <resultMap id="dockerContainerMap" type="org.apache.aurora.gen.DockerContainer">
     <id column="id"/>
     <result column="image" property="image"/>
@@ -135,6 +164,11 @@
         select="selectTaskLinks"
         column="id"
         foreignColumn="task_config_id"/>
+    <collection
+        property="instances"
+        select="selectInstances"
+        column="id"
+        foreignColumn="task_config_id"/>
   </resultMap>
 
   <sql id="unscopedConfigSelect">
@@ -167,7 +201,8 @@
       tlc.value AS constraint_l_limit,
       tvc.id AS constraint_v_id,
       tvc.negated AS constraint_v_negated,
-      tvcv.value as constraint_v_v_value
+      tvcv.value as constraint_v_v_value,
+      i.id AS i_id
     FROM task_configs AS c
     INNER JOIN job_keys AS j ON j.id = c.job_key_id
     LEFT OUTER JOIN task_config_requested_ports AS p ON p.task_config_id = c.id
@@ -177,6 +212,7 @@
     LEFT OUTER JOIN limit_constraints as tlc ON tlc.constraint_id = tc.id
     LEFT OUTER JOIN value_constraints as tvc ON tvc.constraint_id = tc.id
     LEFT OUTER JOIN value_constraint_values AS tvcv ON tvcv.value_constraint_id = tvc.id
+    LEFT OUTER JOIN task_config_instances AS i ON i.task_config_id = c.id
   </sql>
 
   <select id="selectConfig" resultMap="taskConfigMap">
@@ -190,7 +226,7 @@
       AND j.environment = #{environment}
       AND j.name = #{name}
   </select>
-
+  
   <insert id="insertConstraint" useGeneratedKeys="true" keyColumn="id" keyProperty="result.id">
     INSERT INTO task_constraints (
       task_config_id,
@@ -298,7 +334,27 @@
     </foreach>
     )
   </insert>
-
+  
+  <insert id="insertInstance" useGeneratedKeys="true" keyColumn="id" keyProperty="result.id">
+    INSERT INTO task_config_instances (
+      task_config_id
+    ) VALUES (
+      #{configId}
+    )
+  </insert>
+  
+  <insert id="insertInstanceVariables">
+    INSERT INTO task_config_instances_variables (
+      instance_id,
+      name,
+      value
+    ) VALUES (
+      #{instanceId},
+      #{variable.name},
+      #{variable.value}
+    )
+  </insert>
+  
   <insert id="insertMetadata">
     INSERT INTO task_config_metadata (
       task_config_id,

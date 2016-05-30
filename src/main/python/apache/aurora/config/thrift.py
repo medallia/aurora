@@ -30,6 +30,7 @@ from gen.apache.aurora.api.ttypes import (
     DockerParameter,
     ExecutorConfig,
     Identity,
+    Instance,
     JobConfiguration,
     JobKey,
     LimitConstraint,
@@ -37,7 +38,8 @@ from gen.apache.aurora.api.ttypes import (
     Metadata,
     TaskConfig,
     TaskConstraint,
-    ValueConstraint
+    ValueConstraint,
+    Variable
 )
 
 __all__ = (
@@ -225,6 +227,22 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
   task.constraints = constraints_to_thrift(not_empty_or(job.constraints(), {}))
   task.container = create_container_config(job.container())
 
+  numberOfInstances = fully_interpolated(job.instances())
+  numberOfConfig = len(fully_interpolated(job.instance_variables()))
+  if numberOfConfig > 0 and numberOfInstances != numberOfConfig:
+    raise InvalidConfig(("instances value %s doesn't match the number of "
+                        + "instance_variables definitions %s.") % (numberOfInstances,
+                                                                     numberOfConfig))
+
+  instances = list()
+  for pinstance in fully_interpolated(job.instance_variables()):
+    instance = Instance()
+    instance.variables = list()
+    for va in pinstance['variables']:
+      instance.variables.append(Variable(va['name'], va['value']))
+    instances.append(instance)
+
+  task.instances = instances
   underlying, refs = job.interpolate()
 
   # need to fake an instance id for the sake of schema checking
@@ -256,4 +274,4 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       cronSchedule=not_empty_or(job.cron_schedule(), None),
       cronCollisionPolicy=select_cron_policy(job.cron_collision_policy()),
       taskConfig=task,
-      instanceCount=fully_interpolated(job.instances()))
+      instanceCount=numberOfInstances)
