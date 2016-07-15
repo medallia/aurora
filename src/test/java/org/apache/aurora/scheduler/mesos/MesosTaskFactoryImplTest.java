@@ -93,7 +93,11 @@ public class MesosTaskFactoryImplTest extends EasyMockTest {
               .setContainer(Container.docker(
                   new DockerContainer("testimage").setParameters(
                       ImmutableList.of(new DockerParameter("label", "testparameter")))))));
-
+  private static final IAssignedTask TASK_WITH_DOCKER_CMD = IAssignedTask.build(TASK.newBuilder()
+      .setTask(
+          new TaskConfig(TASK.getTask().newBuilder())
+              .setContainer(Container.docker(
+                      new DockerContainer("testimage").setCommand("echo hello")))));
   private static final SlaveID SLAVE = SlaveID.newBuilder().setValue("slave-id").build();
   private static final Offer OFFER_THERMOS_EXECUTOR = Protos.Offer.newBuilder()
       .setId(Protos.OfferID.newBuilder().setValue("offer-id"))
@@ -323,7 +327,7 @@ public class MesosTaskFactoryImplTest extends EasyMockTest {
     ImmutableSet<String> metadata = TASK.getTask().getMetadata().stream()
         .map(m -> METADATA_LABEL_PREFIX + m.getKey() + m.getValue())
         .collect(GuavaUtils.toImmutableSet());
-
+    
     assertEquals(labels, metadata);
     checkDiscoveryInfoUnset(task);
   }
@@ -333,12 +337,13 @@ public class MesosTaskFactoryImplTest extends EasyMockTest {
     AssignedTask builder = TASK.newBuilder();
     builder.getTask()
         .setContainer(Container.docker(new DockerContainer()
-            .setImage("hello-world")))
+            .setImage("hello-world").setCommand("/hello")))
         .unsetExecutorConfig();
 
     TaskInfo task = getDockerTaskInfo(IAssignedTask.build(builder));
     assertTrue(task.hasCommand());
     assertFalse(task.getCommand().getShell());
+    assertEquals("/hello", task.getCommand().getValue());
     assertFalse(task.hasData());
     ContainerInfo expectedContainer = ContainerInfo.newBuilder()
         .setType(Type.DOCKER)

@@ -160,6 +160,7 @@ CREATE TABLE task_config_docker_containers(
   id IDENTITY,
   task_config_id BIGINT NOT NULL REFERENCES task_configs(id) ON DELETE CASCADE,
   image VARCHAR NOT NULL,
+  command VARCHAR,
 
   UNIQUE(task_config_id)
 );

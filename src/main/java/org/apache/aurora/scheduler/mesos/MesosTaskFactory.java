@@ -177,9 +177,13 @@ public interface MesosTaskFactory {
               .setContainer(getDockerContainerInfo(dockerContainer));
           taskBuilder.setExecutor(execBuilder.build());
         } else {
-          LOG.warn("Running Docker-based task without an executor.");
+          LOG.warn("Running Docker-based task without an executor. {}", dockerContainer.toString());
+          CommandInfo.Builder commandInfo = CommandInfo.newBuilder().setShell(false);
+          if (dockerContainer.isSetCommand()) {
+            commandInfo.setValue(dockerContainer.getCommand());
+          }
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer))
-              .setCommand(CommandInfo.newBuilder().setShell(false));
+              .setCommand(commandInfo);
         }
       } else {
         throw new SchedulerException("Task had no supported container set.");

@@ -116,6 +116,7 @@ class Parameter(Struct):
 class Docker(Struct):
   image = Required(String)
   parameters = Default(List(Parameter), [])
+  command = String
 
 
 class Container(Struct):

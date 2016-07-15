@@ -194,6 +194,8 @@ struct DockerContainer {
   1: string image
   /** The arbitrary parameters to pass to container */
   2: optional list<DockerParameter> parameters
+  /** The command to execute, following the CMD semantics */
+  3: optional string command
 }
 
 /** Describes a container to be used in a task */

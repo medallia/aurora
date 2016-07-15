@@ -465,6 +465,7 @@ Describes the container the job's processes will run inside.
   -----            | :----:          | -----------
   ```image```      | String          | The name of the docker image to execute.  If the image does not exist locally it will be pulled with ```docker pull```.
   ```parameters``` | List(Parameter) | Additional parameters to pass to the docker containerizer.
+  ```command```    | String          | The command to execute, following the docker CMD semantics.
 
 ### Docker Parameter Object
 

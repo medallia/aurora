@@ -131,10 +131,15 @@ def create_container_config(container):
     return Container(MesosContainer(), None)
   elif container.docker() is not Empty:
     params = list()
+    cmd = None
     if container.docker().parameters() is not Empty:
       for p in fully_interpolated(container.docker().parameters()):
         params.append(DockerParameter(p['name'], p['value']))
-    return Container(None, DockerContainer(fully_interpolated(container.docker().image()), params))
+    if container.docker().command() is not Empty:
+      cmd = fully_interpolated(container.docker().command())
+      print("FOUND COMMAND" + cmd)
+    return Container(None, DockerContainer(fully_interpolated(container.docker().image()), params,
+      cmd))
   else:
     raise InvalidConfig('If a container is specified it must set one type.')
 
@@ -246,7 +251,8 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
   if unbound:
     raise InvalidConfig('Config contains unbound variables: %s' % ' '.join(map(str, unbound)))
 
-  task.executorConfig = ExecutorConfig(
+  if not task.container.docker.command:
+    task.executorConfig = ExecutorConfig(
       name=AURORA_EXECUTOR_NAME,
       data=filter_aliased_fields(underlying).json_dumps())
 

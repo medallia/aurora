@@ -97,6 +97,7 @@
   <resultMap id="dockerContainerMap" type="org.apache.aurora.gen.DockerContainer">
     <id column="id"/>
     <result column="image" property="image"/>
+    <result column="command" property="command"/>
     <collection
         property="parameters"
         select="selectDockerParameters"
@@ -172,6 +173,7 @@
       p.port_name AS p_port_name,
       d.id AS c_id,
       d.image AS c_image,
+      d.command AS d_command,
       m.id AS m_id,
       m.key AS m_key,
       m.value AS m_value,
@@ -298,10 +300,12 @@
   <insert id="insertContainer" useGeneratedKeys="true" keyColumn="id" keyProperty="result.id">
     INSERT INTO task_config_docker_containers (
       task_config_id,
-      image
+      image,
+      command
     ) VALUES (
       #{configId},
-      #{container.image}
+      #{container.image},
+      #{container.command}
     )
   </insert>
 
