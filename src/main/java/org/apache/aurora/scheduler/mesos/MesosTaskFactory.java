@@ -15,6 +15,7 @@ package org.apache.aurora.scheduler.mesos;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
@@ -229,12 +230,15 @@ public interface MesosTaskFactory {
           .setDocker(dockerBuilder.build());
 
       Protos.Environment.Builder envBuilder = Protos.Environment.newBuilder();
-      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_ID")
-              .setValue(task.getTaskId()).build());
-      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_TASK_INSTANCE")
-              .setValue(Integer.toString(task.getInstanceId())).build());
-      envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName("AURORA_JOB_NAME")
-              .setValue(task.getTask().getJob().getName()).build());
+
+      ImmutableMap<String, String> envVariables = ImmutableMap.of(
+              "AURORA_TASK_ID", task.getTaskId(),
+              "AURORA_TASK_INSTANCE", Integer.toString(task.getInstanceId()),
+              "AURORA_JOB_NAME", task.getTask().getJob().getName(),
+              "AURORA_CLUSTER", serverInfo.getClusterName());
+
+      envVariables.forEach((name, value) ->
+                envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName(name).setValue(value).build()));
 
       taskBuilder.setContainer(containerBuilder.build());
 
