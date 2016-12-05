@@ -22,6 +22,7 @@ import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.ExecutorConfig;
 import org.apache.aurora.gen.Identity;
 import org.apache.aurora.gen.JobKey;
+import org.apache.aurora.gen.KillPolicy;
 import org.apache.aurora.gen.MesosContainer;
 import org.apache.aurora.gen.MesosFetcherURI;
 import org.apache.aurora.gen.Metadata;
@@ -46,6 +47,7 @@ public final class DbTaskConfig {
   private List<Pair<String, String>> taskLinks;
   private String contactEmail;
   private ExecutorConfig executorConfig;
+  private KillPolicy killPolicy;
   private List<Metadata> metadata;
   private List<MesosFetcherURI> mesosFetcherUris;
   private DbContainer container;
@@ -78,6 +80,7 @@ public final class DbTaskConfig {
         .setTaskLinks(Pairs.toMap(taskLinks))
         .setContactEmail(contactEmail)
         .setExecutorConfig(executorConfig)
+        .setKillPolicy(killPolicy)
         .setMetadata(ImmutableSet.copyOf(metadata))
         .setMesosFetcherUris(ImmutableSet.copyOf(mesosFetcherUris))
         .setContainer(

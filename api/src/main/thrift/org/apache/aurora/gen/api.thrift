@@ -238,6 +238,10 @@ union Resource {
   5: i64 numGpus
 }
 
+struct KillPolicy {
+  1: i64 gracePeriod   /** Seconds */
+}
+
 /** Description of the tasks contained within a job. */
 struct TaskConfig {
  /** Job task belongs to. */
@@ -259,6 +263,9 @@ struct TaskConfig {
  18: optional bool production
  /** Task tier type. */
  30: optional string tier
+
+ 15: optional KillPolicy killPolicy
+
  /** All resources required to run a task. */
  32: set<Resource> resources
 

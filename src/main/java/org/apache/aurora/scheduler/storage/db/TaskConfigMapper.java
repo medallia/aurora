@@ -28,6 +28,7 @@ import org.apache.aurora.scheduler.storage.entities.IMesosFetcherURI;
 import org.apache.aurora.scheduler.storage.entities.IMetadata;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.aurora.scheduler.storage.entities.IValueConstraint;
+import org.apache.aurora.scheduler.storage.entities.IKillPolicy;
 import org.apache.aurora.scheduler.storage.entities.IVolume;
 import org.apache.ibatis.annotations.Param;
 

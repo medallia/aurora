@@ -57,6 +57,8 @@ import org.apache.mesos.Protos.Port;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.KillPolicy;
+import org.apache.mesos.Protos.DurationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,17 +208,24 @@ public interface MesosTaskFactory {
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
         IDockerContainer dockerContainer = config.getContainer().getDocker();
-        if (config.isSetExecutorConfig()) {
+        /*if (config.isSetExecutorConfig()) {
           ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
               .setContainer(getDockerContainerInfo(
                   dockerContainer,
                   Optional.of(getExecutorName(task))));
           taskBuilder.setExecutor(execBuilder.build());
         } else {
-          LOG.warn("Running Docker-based task without an executor.");
+          LOG.warn("Running Docker-based task without an executor.");*/
+          DurationInfo.Builder durationBuilder;
+          durationBuilder = DurationInfo.newBuilder()
+                .setNanoseconds(config.getKillPolicy().getGracePeriod()*1000000000);
+
+          KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
+                .setGracePeriod(durationBuilder.build());
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
-              .setCommand(CommandInfo.newBuilder().setShell(false));
-        }
+                .setCommand(CommandInfo.newBuilder().setShell(false))
+                .setKillPolicy(killPolicyBuilder.build());
+        //}
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
