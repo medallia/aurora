@@ -17,11 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.aurora.common.collections.Pair;
 import org.apache.aurora.scheduler.storage.db.views.DbTaskConfig;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
 import org.apache.aurora.scheduler.storage.entities.IDockerParameter;
+import org.apache.aurora.scheduler.storage.entities.IVariable;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.ILimitConstraint;
 import org.apache.aurora.scheduler.storage.entities.IMesosFetcherURI;
@@ -135,6 +137,14 @@ interface TaskConfigMapper extends GarbageCollectedTableMapper {
   void insertDockerParameters(
       @Param("containerId") long containerId,
       @Param("parameters") List<IDockerParameter> parameters);
+
+  void insertInstance(
+          @Param("configId") long configId,
+          @Param("result") InsertResult result);
+
+  void insertInstanceVariables(
+      @Param("instanceId") long instanceId,
+      @Param("variable") IVariable variable);
 
   /**
    * Inserts the metadata association within an {@link ITaskConfig}.
