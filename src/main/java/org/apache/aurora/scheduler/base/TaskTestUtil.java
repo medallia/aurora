@@ -21,24 +21,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 
-import org.apache.aurora.gen.AssignedTask;
-import org.apache.aurora.gen.Constraint;
-import org.apache.aurora.gen.Container;
+import org.apache.aurora.gen.*;
 import org.apache.aurora.gen.Container._Fields;
-import org.apache.aurora.gen.DockerContainer;
-import org.apache.aurora.gen.DockerParameter;
-import org.apache.aurora.gen.Identity;
-import org.apache.aurora.gen.LimitConstraint;
-import org.apache.aurora.gen.MesosFetcherURI;
-import org.apache.aurora.gen.Metadata;
-import org.apache.aurora.gen.Resource;
-import org.apache.aurora.gen.ScheduleStatus;
-import org.apache.aurora.gen.ScheduledTask;
-import org.apache.aurora.gen.TaskConfig;
-import org.apache.aurora.gen.TaskConstraint;
-import org.apache.aurora.gen.TaskEvent;
-import org.apache.aurora.gen.ValueConstraint;
-import org.apache.aurora.gen.apiConstants;
 import org.apache.aurora.scheduler.TierInfo;
 import org.apache.aurora.scheduler.TierManager;
 import org.apache.aurora.scheduler.TierManager.TierManagerImpl.TierConfig;
@@ -148,7 +132,8 @@ public final class TaskTestUtil {
             Resource.numCpus(1.0),
             Resource.ramMb(1024),
             Resource.diskMb(1024),
-            Resource.namedPort("http"))));
+            Resource.namedPort("http")))
+        .setKillPolicy(new KillPolicy(1L)));
   }
 
   public static IScheduledTask makeTask(String id, IJobKey job) {

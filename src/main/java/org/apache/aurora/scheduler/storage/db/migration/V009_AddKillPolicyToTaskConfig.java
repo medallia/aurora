@@ -28,11 +28,11 @@ public class V009_AddKillPolicyToTaskConfig implements MigrationScript {
 
     @Override
     public String getUpScript() {
-        return "ALTER TABLE task_configs ADD kill_policy_grace_period BIGINT;";
+        return "ALTER TABLE task_configs ADD IF NOT EXISTS kill_policy_grace_period BIGINT;";
     }
 
     @Override
     public String getDownScript() {
-        return "ALTER TABLE task_configs DROP COLUMN kill_policy_grace_period;";
+        return "ALTER TABLE task_configs DROP COLUMN IF NOT EXISTS kill_policy_grace_period;";
     }
 }

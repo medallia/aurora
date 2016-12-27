@@ -208,24 +208,28 @@ public interface MesosTaskFactory {
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
         IDockerContainer dockerContainer = config.getContainer().getDocker();
-        /*if (config.isSetExecutorConfig()) {
+        if (config.isSetExecutorConfig()) {
           ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
               .setContainer(getDockerContainerInfo(
                   dockerContainer,
                   Optional.of(getExecutorName(task))));
           taskBuilder.setExecutor(execBuilder.build());
         } else {
-          LOG.warn("Running Docker-based task without an executor.");*/
-          DurationInfo.Builder durationBuilder;
-          durationBuilder = DurationInfo.newBuilder()
-                .setNanoseconds(config.getKillPolicy().getGracePeriod()*1000000000);
+          LOG.warn("Running Docker-based task without an executor.");
 
-          KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
-                .setGracePeriod(durationBuilder.build());
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
-                .setCommand(CommandInfo.newBuilder().setShell(false))
-                .setKillPolicy(killPolicyBuilder.build());
-        //}
+                     .setCommand(CommandInfo.newBuilder().setShell(false));
+
+          if (config.isSetKillPolicy()) {
+            DurationInfo.Builder durationBuilder;
+            durationBuilder = DurationInfo.newBuilder()
+                    .setNanoseconds(config.getKillPolicy().getGracePeriod() * 1000000000);
+
+            KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
+                    .setGracePeriod(durationBuilder.build());
+            taskBuilder.setKillPolicy(killPolicyBuilder.build());
+          }
+        }
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
