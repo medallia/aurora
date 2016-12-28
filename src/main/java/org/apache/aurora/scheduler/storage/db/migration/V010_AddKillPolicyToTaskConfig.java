@@ -15,10 +15,10 @@ package org.apache.aurora.scheduler.storage.db.migration;
 import org.apache.ibatis.migration.MigrationScript;
 import java.math.BigDecimal;
 
-public class V009_AddKillPolicyToTaskConfig implements MigrationScript {
+public class V010_AddKillPolicyToTaskConfig implements MigrationScript {
     @Override
     public BigDecimal getId() {
-        return BigDecimal.valueOf(9L);
+        return BigDecimal.valueOf(10L);
     }
 
     @Override
@@ -33,6 +33,6 @@ public class V009_AddKillPolicyToTaskConfig implements MigrationScript {
 
     @Override
     public String getDownScript() {
-        return "ALTER TABLE task_configs DROP COLUMN IF NOT EXISTS kill_policy_grace_period;";
+        return "ALTER TABLE task_configs DROP COLUMN IF EXISTS kill_policy_grace_period;";
     }
 }
