@@ -48,8 +48,10 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.DiscoveryInfo;
+import org.apache.mesos.Protos.DurationInfo;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.KillPolicy;
 import org.apache.mesos.Protos.Label;
 import org.apache.mesos.Protos.Labels;
 import org.apache.mesos.Protos.Offer;
@@ -57,8 +59,7 @@ import org.apache.mesos.Protos.Port;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.Protos.KillPolicy;
-import org.apache.mesos.Protos.DurationInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
