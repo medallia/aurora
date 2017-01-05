@@ -13,6 +13,7 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,8 +49,10 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.DiscoveryInfo;
+import org.apache.mesos.Protos.DurationInfo;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.KillPolicy;
 import org.apache.mesos.Protos.Label;
 import org.apache.mesos.Protos.Labels;
 import org.apache.mesos.Protos.Offer;
@@ -216,6 +219,17 @@ public interface MesosTaskFactory {
           LOG.warn("Running Docker-based task without an executor.");
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
               .setCommand(CommandInfo.newBuilder().setShell(false));
+
+          if (config.isSetKillPolicy()) {
+            DurationInfo.Builder durationBuilder;
+            durationBuilder = DurationInfo.newBuilder()
+                .setNanoseconds(Duration.ofSeconds(
+                        config.getKillPolicy().getGracePeriodSecs()).toNanos());
+
+            KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
+                .setGracePeriod(durationBuilder.build());
+            taskBuilder.setKillPolicy(killPolicyBuilder.build());
+          }
         }
       } else {
         throw new SchedulerException("Task had no supported container set.");

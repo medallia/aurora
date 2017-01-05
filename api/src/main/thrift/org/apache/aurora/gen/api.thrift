@@ -238,6 +238,12 @@ union Resource {
   5: i64 numGpus
 }
 
+/** Describes a Mesos Kill Policy */
+struct KillPolicy {
+  /** The time to wait for a task to gracefully terminate before killing it */
+  1: i64 gracePeriodSecs
+}
+
 /** Description of the tasks contained within a job. */
 struct TaskConfig {
  /** Job task belongs to. */
@@ -259,6 +265,9 @@ struct TaskConfig {
  18: optional bool production
  /** Task tier type. */
  30: optional string tier
+ /** A Mesos Kill Policy for the task*/
+ 15: optional KillPolicy killPolicy
+
  /** All resources required to run a task. */
  32: set<Resource> resources
 
