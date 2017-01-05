@@ -263,7 +263,7 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       fully_interpolated(task_raw.resources().ram()),
       fully_interpolated(task_raw.resources().disk())))
 
-  task.killPolicy = KillPolicy(gracePeriod=fully_interpolated(task_raw.finalization_wait()))
+  task.killPolicy = KillPolicy(gracePeriodSecs=fully_interpolated(task_raw.finalization_wait()))
 
   task.numCpus = fully_interpolated(task_raw.resources().cpu())
   task.ramMb = fully_interpolated(task_raw.resources().ram()) / MB

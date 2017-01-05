@@ -13,6 +13,7 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,7 +60,6 @@ import org.apache.mesos.Protos.Port;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -217,17 +217,17 @@ public interface MesosTaskFactory {
           taskBuilder.setExecutor(execBuilder.build());
         } else {
           LOG.warn("Running Docker-based task without an executor.");
-
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
-                     .setCommand(CommandInfo.newBuilder().setShell(false));
+              .setCommand(CommandInfo.newBuilder().setShell(false));
 
           if (config.isSetKillPolicy()) {
             DurationInfo.Builder durationBuilder;
             durationBuilder = DurationInfo.newBuilder()
-                    .setNanoseconds(config.getKillPolicy().getGracePeriod() * 1000000000);
+                .setNanoseconds(Duration.ofSeconds(
+                        config.getKillPolicy().getGracePeriodSecs()).toNanos());
 
             KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
-                    .setGracePeriod(durationBuilder.build());
+                .setGracePeriod(durationBuilder.build());
             taskBuilder.setKillPolicy(killPolicyBuilder.build());
           }
         }

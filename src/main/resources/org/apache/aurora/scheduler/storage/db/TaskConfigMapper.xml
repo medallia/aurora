@@ -55,7 +55,7 @@
       #{config.contactEmail},
       #{config.executorConfig.name},
       #{config.executorConfig.data},
-      #{config.killPolicy.gracePeriod},
+      #{config.killPolicy.gracePeriodSecs},
       #{config.tier}
     )
   </insert>
@@ -150,7 +150,7 @@
     <result column="creator_user" property="owner.user"/>
     <result column="executor_name" property="executorConfig.name"/>
     <result column="executor_data" property="executorConfig.data"/>
-    <result column="kill_policy_grace_period" property="killPolicy.gracePeriod"/>
+    <result column="kill_policy_grace_period" property="killPolicy.gracePeriodSecs"/>
     <association
         property="job"
         resultMap="org.apache.aurora.scheduler.storage.db.JobKeyMapper.jobKeyMap"
