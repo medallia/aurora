@@ -286,15 +286,20 @@ public interface MesosTaskFactory {
         IDockerContainer config,
         Optional<String> executorName) {
 
+      Iterable<Protos.Parameter> parameters = Iterables.transform(config.getParameters(),
+              item -> Protos.Parameter.newBuilder().setKey(item.getName())
+                      .setValue(item.getValue()).build());
 
       ContainerInfo.DockerInfo.Builder dockerBuilder = ContainerInfo.DockerInfo.newBuilder()
           .setImage(config.getImage()).addAllParameters(parameters);
+      return ContainerInfo.newBuilder()
           .setType(ContainerInfo.Type.DOCKER)
           .setDocker(dockerBuilder.build())
           .addAllVolumes(
               executorName.isPresent()
                   ? executorSettings.getExecutorConfig(executorName.get()).get().getVolumeMounts()
                   : ImmutableList.of())
+          .build();
     }
 
     @SuppressWarnings("deprecation") // we set the source field for backwards compat.
