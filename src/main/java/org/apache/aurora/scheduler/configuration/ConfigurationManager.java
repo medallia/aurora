@@ -284,16 +284,13 @@ public class ConfigurationManager {
         if (!containerConfig.getDocker().isSetImage()) {
           throw new TaskDescriptionException("A container must specify an image.");
         }
-        if (containerConfig.getDocker().getParameters().isEmpty()) {
-          for (Map.Entry<String, String> e : settings.defaultDockerParameters.entries()) {
-            builder.getContainer().getDocker().addToParameters(
-                new DockerParameter(e.getKey(), e.getValue()));
-          }
-        } else {
-          if (!settings.allowDockerParameters) {
-            throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
-          }
-        }
+		for (Map.Entry<String, String> e : settings.defaultDockerParameters.entries()) {
+		  builder.getContainer().getDocker().addToParameters(
+			  new DockerParameter(e.getKey(), e.getValue()));
+		}
+		if (!settings.allowDockerParameters) {
+		  throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
+		}
 
         if (settings.requireDockerUseExecutor && !config.isSetExecutorConfig()) {
           throw new TaskDescriptionException(EXECUTOR_REQUIRED_WITH_DOCKER);
