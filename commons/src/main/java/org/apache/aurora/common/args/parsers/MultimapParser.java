@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class MultimapParser extends TypeParameterizedParser<Multimap<?, ?>> {
 
   private static final Splitter KEY_VALUE_SPLITTER =
-      Splitter.on("=").trimResults().omitEmptyStrings();
+      Splitter.on("=").limit(2).trimResults().omitEmptyStrings(); // TODO add test and push the fix to upstream
 
   public MultimapParser() {
     super(2);

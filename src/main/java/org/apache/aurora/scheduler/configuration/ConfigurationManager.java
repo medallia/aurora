@@ -13,7 +13,10 @@
  */
 package org.apache.aurora.scheduler.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -284,16 +287,18 @@ public class ConfigurationManager {
         if (!containerConfig.getDocker().isSetImage()) {
           throw new TaskDescriptionException("A container must specify an image.");
         }
-        if (containerConfig.getDocker().getParameters().isEmpty()) {
-          for (Map.Entry<String, String> e : settings.defaultDockerParameters.entries()) {
-            builder.getContainer().getDocker().addToParameters(
-                new DockerParameter(e.getKey(), e.getValue()));
-          }
-        } else {
-          if (!settings.allowDockerParameters) {
-            throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
-          }
+        if (!settings.defaultDockerParameters.isEmpty()) {
+          List<DockerParameter> parameters = new ArrayList<>();
+          List<DockerParameter> defaultParameters = settings.defaultDockerParameters.entries()
+                  .stream().map(e -> new DockerParameter(e.getKey(), e.getValue())).collect(Collectors.toList());
+          parameters.addAll(defaultParameters);
+          parameters.addAll(builder.getContainer().getDocker().getParameters());
+          builder.getContainer().getDocker().setParameters(parameters);
         }
+
+		if (!settings.allowDockerParameters) {
+		  throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
+		}
 
         if (settings.requireDockerUseExecutor && !config.isSetExecutorConfig()) {
           throw new TaskDescriptionException(EXECUTOR_REQUIRED_WITH_DOCKER);
