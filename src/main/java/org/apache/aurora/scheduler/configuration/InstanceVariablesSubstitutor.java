@@ -91,8 +91,10 @@ public class InstanceVariablesSubstitutor {
     }, PREFIX, SUFFIX, ESCAPE));
     try {
       LOG.info("Validating Job {}. {}", taskConfig.getJob().getName(), variablesPerInstance);
-      in.getDockerParameters();
-      in.getCmdLine();
+      if (taskConfig.getContainer().isSetDocker()) {
+        in.getDockerParameters();
+        in.getCmdLine();
+      }
       return true;
     } catch (InstanceVariablesSubstitutorException e) {
       throw new ConfigurationManager.TaskDescriptionException(e.getMessage());

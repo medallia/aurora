@@ -197,12 +197,14 @@ public class ConfigurationManager {
 
     JobConfiguration builder = job.newBuilder();
 
-    ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
-    if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
+    if(job.getTaskConfig().getContainer().isSetDocker()){
+      ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+      if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
         // specified instanceCount must match number of instances
         throw new TaskDescriptionException(String.format(
                 "Job instanceCount %s doesn't match number of instances %s",
                 job.getInstanceCount(), instances.size()));
+      }
     }
 
     if (!JobKeys.isValid(job.getKey())) {

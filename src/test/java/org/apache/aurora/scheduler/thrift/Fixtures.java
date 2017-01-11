@@ -23,6 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.aurora.gen.AssignedTask;
@@ -114,6 +115,7 @@ final class Fixtures {
         .setMaxTaskFailures(1)
         .setConstraints(ImmutableSet.of())
         .setMetadata(ImmutableSet.of())
+        .setInstances(ImmutableList.of())
         .setMesosFetcherUris(ImmutableSet.of())
         .setContainer(Container.mesos(new MesosContainer()))
         .setResources(ImmutableSet.of(

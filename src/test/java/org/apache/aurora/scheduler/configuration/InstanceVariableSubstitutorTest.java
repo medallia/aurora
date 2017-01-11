@@ -92,7 +92,7 @@ public class InstanceVariableSubstitutorTest {
 
   private TaskConfig getTaskConfig() {
     return new TaskConfig()
-            //.setJobName("container-test")
+            .setJob(new JobKey("Medallia","devel","container-test"))
             .setInstances(ImmutableList.of(
                     new Instance(ImmutableList.of(new Variable("ip", "192.168.1.20"), new Variable("vol", "X"))),
                     new Instance(ImmutableList.of(new Variable("ip", "192.168.1.21"), new Variable("vol", "Y"))),

@@ -209,9 +209,9 @@ public interface MesosTaskFactory {
 
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
-        configureTaskForDockerContainer(task, config, taskBuilder, acceptedOffer);
-        return taskBuilder.build();
-        /** TODO: Add support for command line arguments for docker
+        /*configureTaskForDockerContainer(task, config, taskBuilder, acceptedOffer);
+        return taskBuilder.build();*/
+        /* TODO: Add support for command line arguments for docker*/
         IDockerContainer dockerContainer = config.getContainer().getDocker();
         if (config.isSetExecutorConfig()) {
           ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
@@ -224,7 +224,6 @@ public interface MesosTaskFactory {
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
               .setCommand(CommandInfo.newBuilder().setShell(false));
         }
-        */
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
