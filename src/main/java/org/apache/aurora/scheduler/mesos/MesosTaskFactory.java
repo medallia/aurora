@@ -209,10 +209,10 @@ public interface MesosTaskFactory {
 
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
-        /*configureTaskForDockerContainer(task, config, taskBuilder, acceptedOffer);
-        return taskBuilder.build();*/
+        configureTaskForDockerContainer(task, config, taskBuilder, acceptedOffer);
+        return taskBuilder.build();
         /* TODO: Add support for command line arguments for docker*/
-        IDockerContainer dockerContainer = config.getContainer().getDocker();
+        /*IDockerContainer dockerContainer = config.getContainer().getDocker();
         if (config.isSetExecutorConfig()) {
           ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
               .setContainer(getDockerContainerInfo(
@@ -223,7 +223,7 @@ public interface MesosTaskFactory {
           LOG.warn("Running Docker-based task without an executor.");
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
               .setCommand(CommandInfo.newBuilder().setShell(false));
-        }
+        }*/
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
