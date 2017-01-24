@@ -388,6 +388,10 @@ public class ConfigurationManager {
       throw new TaskDescriptionException(MESOS_FETCHER_DISABLED);
     }
 
+    if (config.isSetKillPolicy() && config.getKillPolicy().getGracePeriodSecs() < 0) {
+      throw new TaskDescriptionException("Grace Period should be greater than 0");
+    }
+
     maybeFillLinks(builder);
 
     return ITaskConfig.build(builder);
