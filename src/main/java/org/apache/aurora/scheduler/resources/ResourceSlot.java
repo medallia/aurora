@@ -315,26 +315,7 @@ public final class ResourceSlot {
   public static final Ordering<ResourceSlot> ORDER = new Ordering<ResourceSlot>() {
     @Override
     public int compare(ResourceSlot left, ResourceSlot right) {
-      int diskC = left.getDisk().compareTo(right.getDisk());
-      int ramC = left.getRam().compareTo(right.getRam());
-      int portC = Integer.compare(left.getNumPorts(), right.getNumPorts());
-      int cpuC = Double.compare(left.getNumCpus(), right.getNumCpus());
-
-      List<Integer> vector = ImmutableList.of(diskC, ramC, portC, cpuC);
-
-      if (vector.stream().allMatch(IS_ZERO))  {
-        return 0;
-      }
-
-      if (vector.stream().filter(IS_ZERO.negate()).allMatch(e -> e > 0)) {
-        return 1;
-      }
-
-      if (vector.stream().filter(IS_ZERO.negate()).allMatch(e -> e < 0)) {
-        return -1;
-      }
-
-      return 0;
+      return left.getRam().compareTo(right.getRam());
     }
   };
 
