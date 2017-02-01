@@ -2,37 +2,6 @@
 import groovy.json.JsonSlurperClassic
 node ('general') {
 	try {
-		stage ('git checkout') {
-			sh "pwd"
-
-			checkout scm
-			isTag = env.GIT_TAG_TRIGGER.equals("TRUE");
-
-			if(isTag) {
-				println "Instanstiating JsonSlurperClassic"
-				slurper = new JsonSlurperClassic()
-				println "Parsing payload"
-				jsonPayload = slurper.parseText(payload)
-
-				println "Print RefType -> $jsonPayload.ref_type"
-				println "Print Ref -> $jsonPayload.ref"
-
-				if (!jsonPayload.ref_type.equals("tag")) {
-					println "This is not a TAG."
-					return
-				}
-				gitTag = jsonPayload.ref
-				slurper = null
-				jsonPayload = null
-
-				println "Name of the TAG : $gitTag"
-				sh "git checkout $gitTag"
-			} else {
-				println "This is not a TAG."
-				return 
-			}
-		}
-
 		stage("Checkout docker-aurora-cheduler ") {
 			sh "git clone git@github.medallia.com:medallia/docker-aurora-scheduler.git"
 			println "Checked out docker-aurora-scheduler"
