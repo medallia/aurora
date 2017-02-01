@@ -199,6 +199,11 @@ public class ConfigurationManager {
 
     JobConfiguration builder = job.newBuilder();
 
+    /* This if was added to prevent Aurora tests from failing
+    when instanceCount does not match the number of instances passed.
+    This happens specifically for tests using Mesos Containers, and should
+    be fixed in the tests to remove the if.
+    */
     if(job.getTaskConfig().getContainer().isSetDocker()){
       ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
       if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
