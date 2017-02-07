@@ -16,7 +16,10 @@ package org.apache.aurora.scheduler.offers;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.Protos.Value.Scalar;
+import org.apache.mesos.Protos.Value.Type;
 
 /**
  * Utility class for creating resource offers in unit tests.
@@ -39,5 +42,17 @@ public final class Offers {
         .setSlaveId(SlaveID.newBuilder().setValue("slave_id-" + offerId))
         .setHostname(hostName)
         .build();
+  }
+
+  public static Offer makeOfferWithResources(String offerId, String hostName, Double cpu, Double ram, Double disk) {
+    return Offer.newBuilder()
+            .setId(OfferID.newBuilder().setValue(offerId))
+            .setFrameworkId(FrameworkID.newBuilder().setValue("framework_id"))
+            .setSlaveId(SlaveID.newBuilder().setValue("slave_id-" + offerId))
+            .setHostname(hostName)
+            .addResources(Resource.newBuilder().setType(Type.SCALAR).setName("cpus").setScalar(Scalar.newBuilder().setValue(cpu)))
+            .addResources(Resource.newBuilder().setType(Type.SCALAR).setName("mem").setScalar(Scalar.newBuilder().setValue(ram)))
+            .addResources(Resource.newBuilder().setType(Type.SCALAR).setName("disk").setScalar(Scalar.newBuilder().setValue(disk)))
+            .build();
   }
 }

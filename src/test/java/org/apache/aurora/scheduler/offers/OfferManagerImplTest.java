@@ -13,6 +13,7 @@
  */
 package org.apache.aurora.scheduler.offers;
 
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Optional;
@@ -44,8 +45,8 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.aurora.gen.MaintenanceMode.DRAINING;
-import static org.apache.aurora.gen.MaintenanceMode.NONE;
+import static org.apache.aurora.gen.MaintenanceMode.*;
+import static org.apache.aurora.scheduler.base.TaskTestUtil.DEV_TIER;
 import static org.apache.aurora.scheduler.base.TaskTestUtil.JOB;
 import static org.apache.aurora.scheduler.base.TaskTestUtil.makeTask;
 import static org.apache.aurora.scheduler.offers.OfferManager.OfferManagerImpl.OFFER_ACCEPT_RACES;
@@ -55,6 +56,7 @@ import static org.apache.aurora.scheduler.resources.ResourceTestUtil.mesosRange;
 import static org.apache.aurora.scheduler.resources.ResourceTestUtil.offer;
 import static org.apache.aurora.scheduler.resources.ResourceType.PORTS;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -66,17 +68,25 @@ public class OfferManagerImplTest extends EasyMockTest {
   private static final IHostAttributes HOST_ATTRIBUTES_A =
       IHostAttributes.build(new HostAttributes().setMode(NONE).setHost(HOST_A));
   private static final HostOffer OFFER_A = new HostOffer(
-      Offers.makeOffer("OFFER_A", HOST_A),
+      Offers.makeOfferWithResources("OFFER_A", HOST_A, 1.0, 2.0, 3.0),
       HOST_ATTRIBUTES_A);
   private static final Protos.OfferID OFFER_A_ID = OFFER_A.getOffer().getId();
   private static final String HOST_B = "HOST_B";
   private static final HostOffer OFFER_B = new HostOffer(
-      Offers.makeOffer("OFFER_B", HOST_B),
+      Offers.makeOfferWithResources("OFFER_B", HOST_B, 1.5, 2.0, 3.0),
       IHostAttributes.build(new HostAttributes().setMode(NONE)));
   private static final String HOST_C = "HOST_C";
   private static final HostOffer OFFER_C = new HostOffer(
-      Offers.makeOffer("OFFER_C", HOST_C),
+      Offers.makeOfferWithResources("OFFER_C", HOST_C, 1.5, 2.5, 3.0),
       IHostAttributes.build(new HostAttributes().setMode(NONE)));
+  private static final String HOST_D = "HOST_D";
+  private static final HostOffer OFFER_D = new HostOffer(
+          Offers.makeOfferWithResources("OFFER_D", HOST_D, 1.5, 2.5, 3.5),
+          IHostAttributes.build(new HostAttributes().setMode(NONE)));
+  private static final String HOST_E = "HOST_E";
+  private static final HostOffer OFFER_E = new HostOffer(
+          Offers.makeOfferWithResources("OFFER_E", HOST_E, 1.5, 2.5, 4.0),
+          IHostAttributes.build(new HostAttributes().setMode(NONE)));
   private static final int PORT = 1000;
   private static final Protos.Offer MESOS_OFFER = offer(mesosRange(PORTS, PORT));
   private static final IScheduledTask TASK = makeTask("id", JOB);
@@ -115,10 +125,75 @@ public class OfferManagerImplTest extends EasyMockTest {
   }
 
   @Test
+  public void testOffersSortedByResource() throws Exception {
+    // Ensures that order of the resources is least to great in terms of RAM, then CPU, then DISK
+
+    driver.acceptOffers(OFFER_A_ID, OPERATIONS, OFFER_FILTER);
+
+    driver.declineOffer(OFFER_B.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(OFFER_C.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(OFFER_D.getOffer().getId(), OFFER_FILTER);
+
+    control.replay();
+
+    offerManager.addOffer(OFFER_D);
+    offerManager.addOffer(OFFER_C);
+    offerManager.addOffer(OFFER_B);
+    offerManager.addOffer(OFFER_A);
+
+    Iterable<HostOffer> offers = offerManager.getOffers(GROUP_KEY, DEV_TIER);
+    Iterator<HostOffer> it = offers.iterator();
+    assertEquals(it.next(), OFFER_A);
+    assertEquals(it.next(), OFFER_B);
+    assertEquals(it.next(), OFFER_C);
+    assertEquals(it.next(), OFFER_D);
+
+    offerManager.launchTask(OFFER_A.getOffer().getId(), TASK_INFO);
+    clock.advance(RETURN_DELAY);
+  }
+
+  @Test
+  public void testOffersSortedByMaintenanceModeThenSource() throws Exception {
+    // Ensures that order of the resources is least to great in terms of MaintenanceMode then RAM, then CPU, then DISK
+
+    HostOffer A_DRAINED = setMode(OFFER_A, DRAINED);
+    HostOffer B_DRAINING = setMode(OFFER_B, DRAINING);
+    HostOffer C_SCHEDULED = setMode(OFFER_C, SCHEDULED);
+    // E has more disk free than D so it should be after D in the sorting
+    HostOffer D_NONE = setMode(OFFER_D, NONE);
+    HostOffer E_NONE = setMode(OFFER_E, NONE);
+
+    driver.acceptOffers(D_NONE.getOffer().getId(), OPERATIONS, OFFER_FILTER);
+
+    driver.declineOffer(E_NONE.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(C_SCHEDULED.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(B_DRAINING.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(A_DRAINED.getOffer().getId(), OFFER_FILTER);
+
+    control.replay();
+
+    offerManager.addOffer(A_DRAINED);
+    offerManager.addOffer(B_DRAINING);
+    offerManager.addOffer(C_SCHEDULED);
+    offerManager.addOffer(D_NONE);
+    offerManager.addOffer(E_NONE);
+
+    Iterable<HostOffer> offers = offerManager.getOffers(GROUP_KEY, DEV_TIER);
+    Iterator<HostOffer> it = offers.iterator();
+    assertEquals(it.next(), D_NONE);
+    assertEquals(it.next(), E_NONE);
+    assertEquals(it.next(), C_SCHEDULED);
+    assertEquals(it.next(), B_DRAINING);
+    assertEquals(it.next(), A_DRAINED);
+
+    offerManager.launchTask(D_NONE.getOffer().getId(), TASK_INFO);
+    clock.advance(RETURN_DELAY);
+  }
+  @Test
   public void testOffersSorted() throws Exception {
     // Ensures that non-DRAINING offers are preferred - the DRAINING offer would be tried last.
 
-    HostOffer offerA = setMode(OFFER_A, DRAINING);
+    HostOffer offerA = setMode(OFFER_A, SCHEDULED);
     HostOffer offerC = setMode(OFFER_C, DRAINING);
 
     driver.acceptOffers(OFFER_B.getOffer().getId(), OPERATIONS, OFFER_FILTER);

@@ -14,10 +14,12 @@
 package org.apache.aurora.scheduler.offers;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -39,6 +41,7 @@ import org.apache.aurora.common.quantity.Time;
 import org.apache.aurora.common.stats.StatsProvider;
 import org.apache.aurora.gen.MaintenanceMode;
 import org.apache.aurora.scheduler.HostOffer;
+import org.apache.aurora.scheduler.TierInfo;
 import org.apache.aurora.scheduler.async.AsyncModule.AsyncExecutor;
 import org.apache.aurora.scheduler.async.DelayExecutor;
 import org.apache.aurora.scheduler.base.TaskGroupKey;
@@ -120,6 +123,14 @@ public interface OfferManager extends EventSubscriber {
    * @return A snapshot of all offers eligible for the given {@code groupKey}.
    */
   Iterable<HostOffer> getOffers(TaskGroupKey groupKey);
+
+  /**
+   * Gets all offers that are not statically banned for the given {@code groupKey}.
+   *
+   * @param groupKey Task group key to check offers for.
+   * @return A snapshot of all offers eligible for the given, sorted by ram then by cpu then by disk {@code groupKey}.
+   */
+  Iterable<HostOffer> getOffers(TaskGroupKey groupKey, TierInfo tierInfo);
 
   /**
    * Gets an offer for the given slave ID.
@@ -238,6 +249,10 @@ public interface OfferManager extends EventSubscriber {
       return hostOffers.getWeaklyConsistentOffers(groupKey);
     }
 
+    public Iterable<HostOffer> getOffers(TaskGroupKey groupKey, TierInfo tierInfo) {
+      return hostOffers.getOffers(groupKey, tierInfo);
+    }
+
     @Override
     public Optional<HostOffer> getOffer(SlaveID slaveId) {
       return hostOffers.get(slaveId);
@@ -280,10 +295,9 @@ public interface OfferManager extends EventSubscriber {
                 public MaintenanceMode apply(HostOffer offer) {
                   return offer.getAttributes().getMode();
                 }
-              })
-              .compound(Ordering.arbitrary());
+              });
 
-      private final Set<HostOffer> offers = new ConcurrentSkipListSet<>(PREFERENCE_COMPARATOR);
+      private final Set<HostOffer> offers = new ConcurrentSkipListSet<>(PREFERENCE_COMPARATOR.thenComparing(Ordering.arbitrary()));
       private final Map<OfferID, HostOffer> offersById = Maps.newHashMap();
       private final Map<SlaveID, HostOffer> offersBySlave = Maps.newHashMap();
       private final Map<String, HostOffer> offersByHost = Maps.newHashMap();
@@ -337,6 +351,18 @@ public interface OfferManager extends EventSubscriber {
       synchronized Iterable<HostOffer> getWeaklyConsistentOffers(TaskGroupKey groupKey) {
         return Iterables.unmodifiableIterable(FluentIterable.from(offers).filter(
             e -> !staticallyBannedOffers.containsEntry(e.getOffer().getId(), groupKey)));
+      }
+
+      synchronized List<HostOffer> getOffers(TaskGroupKey groupKey, TierInfo tierInfo) {
+        return offers.stream()
+                .filter(e -> !staticallyBannedOffers.containsEntry(e.getOffer().getId(), groupKey))
+                .sorted(
+                        PREFERENCE_COMPARATOR
+                        .thenComparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getRAM())
+                        .thenComparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getCpu())
+                        .thenComparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getDisk())
+                )
+                .collect(Collectors.toList());
       }
 
       synchronized void addStaticGroupBan(OfferID offerId, TaskGroupKey groupKey) {

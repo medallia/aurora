@@ -84,6 +84,18 @@ public class ResourceBag {
     this.resourceVectors = ImmutableMap.copyOf(resourceVectors);
   }
 
+  public Double getRAM() {
+    return this.resourceVectors.get(RAM_MB);
+  }
+
+  public Double getCpu() {
+    return this.resourceVectors.get(CPUS);
+  }
+
+  public Double getDisk() {
+    return this.resourceVectors.get(DISK_MB);
+  }
+
   /**
    * Gets resource vectors in the bag.
    *
