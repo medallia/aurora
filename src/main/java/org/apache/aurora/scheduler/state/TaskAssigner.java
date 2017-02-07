@@ -13,9 +13,14 @@
  */
 package org.apache.aurora.scheduler.state;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
@@ -139,7 +144,8 @@ public interface TaskAssigner {
         String taskId,
         Map<String, TaskGroupKey> slaveReservations) {
 
-      for (HostOffer offer : offerManager.getOffers(groupKey)) {
+      TierInfo tierInfo = tierManager.getTier(groupKey.getTask());
+      for (HostOffer offer : offerManager.getOffers(groupKey, tierInfo)) {
         Optional<TaskGroupKey> reservedGroup = Optional.fromNullable(
             slaveReservations.get(offer.getOffer().getSlaveId().getValue()));
 
@@ -148,7 +154,6 @@ public interface TaskAssigner {
           continue;
         }
 
-        TierInfo tierInfo = tierManager.getTier(groupKey.getTask());
         Set<Veto> vetoes = filter.filter(
             new UnusedResource(offer.getResourceBag(tierInfo), offer.getAttributes()),
             resourceRequest);
