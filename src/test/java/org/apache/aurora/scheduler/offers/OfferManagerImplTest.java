@@ -46,8 +46,7 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.aurora.gen.MaintenanceMode.DRAINING;
-import static org.apache.aurora.gen.MaintenanceMode.NONE;
+import static org.apache.aurora.gen.MaintenanceMode.*;
 import static org.apache.aurora.scheduler.base.TaskTestUtil.DEV_TIER;
 import static org.apache.aurora.scheduler.base.TaskTestUtil.JOB;
 import static org.apache.aurora.scheduler.base.TaskTestUtil.makeTask;
@@ -80,6 +79,10 @@ public class OfferManagerImplTest extends EasyMockTest {
   private static final String HOST_D = "HOST_D";
   private static final HostOffer OFFER_D = new HostOffer(
           Offers.makeOfferWithResources("OFFER_D", HOST_D, 1.5, 2.5, 3.5),
+          IHostAttributes.build(new HostAttributes().setMode(NONE)));
+  private static final String HOST_E = "HOST_E";
+  private static final HostOffer OFFER_E = new HostOffer(
+          Offers.makeOfferWithResources("OFFER_E", HOST_E, 1.5, 2.5, 4.0),
           IHostAttributes.build(new HostAttributes().setMode(NONE)));
   private static final int PORT = 1000;
   private static final Protos.Offer MESOS_OFFER = offer(mesosRange(PORTS, PORT));
@@ -146,10 +149,47 @@ public class OfferManagerImplTest extends EasyMockTest {
   }
 
   @Test
+  public void testOffersSortedByMaintenanceModeThenSource() throws Exception {
+    // Ensures that order of the resources is least to great in terms of MaintenanceMode then RAM, then CPU, then DISK
+
+    HostOffer A_DRAINED = setMode(OFFER_A, DRAINED);
+    HostOffer B_DRAINING = setMode(OFFER_B, DRAINING);
+    HostOffer C_SCHEDULED = setMode(OFFER_C, SCHEDULED);
+    // E has more disk free than D so it should be after D in the sorting
+    HostOffer D_NONE = setMode(OFFER_D, NONE);
+    HostOffer E_NONE = setMode(OFFER_E, NONE);
+
+    driver.acceptOffers(D_NONE.getOffer().getId(), OPERATIONS, OFFER_FILTER);
+
+    driver.declineOffer(E_NONE.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(C_SCHEDULED.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(B_DRAINING.getOffer().getId(), OFFER_FILTER);
+    driver.declineOffer(A_DRAINED.getOffer().getId(), OFFER_FILTER);
+
+    control.replay();
+
+    offerManager.addOffer(A_DRAINED);
+    offerManager.addOffer(B_DRAINING);
+    offerManager.addOffer(C_SCHEDULED);
+    offerManager.addOffer(D_NONE);
+    offerManager.addOffer(E_NONE);
+
+    Iterable<HostOffer> offers = offerManager.getOffers(GROUP_KEY, DEV_TIER);
+    Iterator<HostOffer> it = offers.iterator();
+    assertEquals(it.next(), D_NONE);
+    assertEquals(it.next(), E_NONE);
+    assertEquals(it.next(), C_SCHEDULED);
+    assertEquals(it.next(), B_DRAINING);
+    assertEquals(it.next(), A_DRAINED);
+
+    offerManager.launchTask(D_NONE.getOffer().getId(), TASK_INFO);
+    clock.advance(RETURN_DELAY);
+  }
+  @Test
   public void testOffersSorted() throws Exception {
     // Ensures that non-DRAINING offers are preferred - the DRAINING offer would be tried last.
 
-    HostOffer offerA = setMode(OFFER_A, DRAINING);
+    HostOffer offerA = setMode(OFFER_A, SCHEDULED);
     HostOffer offerC = setMode(OFFER_C, DRAINING);
 
     driver.acceptOffers(OFFER_B.getOffer().getId(), OPERATIONS, OFFER_FILTER);
