@@ -291,10 +291,9 @@ public interface OfferManager extends EventSubscriber {
                 public MaintenanceMode apply(HostOffer offer) {
                   return offer.getAttributes().getMode();
                 }
-              })
-              .compound(Ordering.arbitrary());
+              });
 
-      private final Set<HostOffer> offers = new ConcurrentSkipListSet<>(PREFERENCE_COMPARATOR);
+      private final Set<HostOffer> offers = new ConcurrentSkipListSet<>(PREFERENCE_COMPARATOR.thenComparing(Ordering.arbitrary()));
       private final Map<OfferID, HostOffer> offersById = Maps.newHashMap();
       private final Map<SlaveID, HostOffer> offersBySlave = Maps.newHashMap();
       private final Map<String, HostOffer> offersByHost = Maps.newHashMap();
@@ -352,8 +351,9 @@ public interface OfferManager extends EventSubscriber {
       synchronized List<HostOffer> getOffers(TaskGroupKey groupKey, TierInfo tierInfo) {
         return offers.stream()
                 .filter(e -> !staticallyBannedOffers.containsEntry(e.getOffer().getId(), groupKey))
-                .sorted(Comparator
-                        .comparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getRAM())
+                .sorted(
+                        PREFERENCE_COMPARATOR
+                        .thenComparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getRAM())
                         .thenComparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getCpu())
                         .thenComparing((HostOffer ho) -> ho.getResourceBag(tierInfo).getDisk())
                 )
