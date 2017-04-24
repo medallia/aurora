@@ -95,11 +95,6 @@ public class SchedulingFilterImpl implements SchedulingFilter {
     for (IConstraint constraint : VALUES_FIRST.sortedCopy(taskConstraints)) {
       Optional<Veto> veto = ConstraintMatcher.getVeto(jobState, offerAttributes, constraint);
       if (veto.isPresent()) {
-        // If we have specified { dedicated: */* } then it is a green light to run anywhere
-        // Only check if veto'd which shouldn't hurt scheduling time too much
-        if (constraint.getName().equals(DEDICATED_ATTRIBUTE) && constraint.getConstraint().getValue().getValues().contains("*/*")) {
-          continue;
-        }
         // Break early to avoid potentially-expensive operations to satisfy other constraints.
         return veto;
       }
