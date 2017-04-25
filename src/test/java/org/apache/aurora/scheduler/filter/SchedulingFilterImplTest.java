@@ -271,6 +271,15 @@ public class SchedulingFilterImplTest extends EasyMockTest {
   }
 
   @Test
+  public void testIgnoreDedicated() {
+    control.replay();
+
+    assertNoVetoes(
+            makeTask(JOB_A, makeConstraint(DEDICATED_ATTRIBUTE, "*/*")),
+            hostAttributes(HOST_A, dedicated(HOST_A)));
+  }
+
+  @Test
   public void testUnderLimitNoTasks() {
     control.replay();
 
