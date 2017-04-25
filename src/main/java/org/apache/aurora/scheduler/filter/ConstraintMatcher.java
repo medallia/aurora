@@ -28,6 +28,8 @@ import org.apache.aurora.scheduler.storage.entities.IAttribute;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.ITaskConstraint;
 
+import static org.apache.aurora.scheduler.configuration.ConfigurationManager.DEDICATED_ATTRIBUTE;
+
 /**
  * Filter that determines whether a task's constraints are satisfied.
  */
@@ -50,6 +52,11 @@ final class ConstraintMatcher {
       AttributeAggregate cachedjobState,
       Iterable<IAttribute> hostAttributes,
       IConstraint constraint) {
+
+    // If we have specified { dedicated: */* } then the dedicated attribute should not be considered
+    if (constraint.getName().equals(DEDICATED_ATTRIBUTE) && constraint.getConstraint().getValue().getValues().contains("*/*")) {
+      return Optional.absent();
+    }
 
     Iterable<IAttribute> sameNameAttributes =
         Iterables.filter(hostAttributes, new NameFilter(constraint.getName()));
