@@ -141,25 +141,7 @@ public interface PreemptionVictimFilter {
     static final Ordering<ResourceBag> ORDER = new Ordering<ResourceBag>() {
       @Override
       public int compare(ResourceBag left, ResourceBag right) {
-        ImmutableList.Builder<Integer> builder = ImmutableList.builder();
-        left.streamResourceVectors().forEach(
-            entry -> builder.add(entry.getValue().compareTo(right.valueOf(entry.getKey()))));
-
-        List<Integer> results = builder.build();
-
-        if (results.stream().allMatch(IS_ZERO))  {
-          return 0;
-        }
-
-        if (results.stream().filter(IS_ZERO.negate()).allMatch(e -> e > 0)) {
-          return 1;
-        }
-
-        if (results.stream().filter(IS_ZERO.negate()).allMatch(e -> e < 0)) {
-          return -1;
-        }
-
-        return 0;
+        return left.getRAM().compareTo(right.getRAM());
       }
     };
 
