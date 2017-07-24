@@ -87,6 +87,7 @@ CREATE TABLE task_configs(
   contact_email VARCHAR,
   executor_name VARCHAR,
   executor_data VARCHAR,
+  kill_policy_grace_period BIGINT,
   tier VARCHAR
 );
 

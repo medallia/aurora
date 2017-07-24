@@ -45,6 +45,7 @@ from gen.apache.aurora.api.ttypes import (
     Image,
     JobConfiguration,
     JobKey,
+    KillPolicy,
     LimitConstraint,
     MesosContainer,
     Metadata,
@@ -265,6 +266,7 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       fully_interpolated(task_raw.resources().ram()),
       fully_interpolated(task_raw.resources().disk())))
 
+  task.killPolicy = KillPolicy(gracePeriodSecs=fully_interpolated(task_raw.finalization_wait()))
   task.numCpus = fully_interpolated(task_raw.resources().cpu())
   task.ramMb = fully_interpolated(task_raw.resources().ram()) / MB
   task.diskMb = fully_interpolated(task_raw.resources().disk()) / MB
@@ -278,7 +280,7 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
        Resource(ramMb=task.ramMb),
        Resource(diskMb=task.diskMb)]
       + [Resource(namedPort=p) for p in ports]
-      + [Resource(numGpus=numGpus)] if numGpus else [])
+      + ([Resource(numGpus=numGpus)] if numGpus else []))
 
   task.job = key
   task.owner = owner
