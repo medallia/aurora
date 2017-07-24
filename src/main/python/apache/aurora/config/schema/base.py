@@ -126,11 +126,17 @@ class Parameter(Struct):
   name = Required(String)
   value = Required(String)
 
+class Variable(Struct):
+  name = String
+  value = String
+
+class Instance(Struct):
+  variables = Default(List(Variable), [])
+
 
 class Docker(Struct):
   image = Required(String)
   parameters = Default(List(Parameter), [])
-
 
 class AppcImage(Struct):
   name = Required(String)
@@ -208,10 +214,11 @@ class MesosJob(Struct):
   max_task_failures          = Default(Integer, 1)
   production                 = Default(Boolean, False)
   priority                   = Default(Integer, 0)
-  health_check_config        = Default(HealthCheckConfig, HealthCheckConfig())
+  health_check_config        = HealthCheckConfig
   # TODO(wickman) Make Default(Any, LifecycleConfig()) once pystachio #17 is addressed.
   lifecycle                  = Default(LifecycleConfig, DefaultLifecycleConfig)
   task_links                 = Map(String, String)  # Unsupported.  See AURORA-739
+  instance_variables         = Default(List(Instance), [])
   executor_config            = Default(ExecutorConfig, ExecutorConfig())
 
   enable_hooks = Default(Boolean, False)  # enable client API hooks; from env python-list 'hooks'

@@ -13,9 +13,10 @@
  */
 package org.apache.aurora.scheduler.configuration;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
+
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -23,6 +24,7 @@ import javax.inject.Inject;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,6 +47,8 @@ import org.apache.aurora.scheduler.resources.ResourceType;
 import org.apache.aurora.scheduler.storage.durability.ThriftBackfill;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IContainer;
+import org.apache.aurora.scheduler.storage.entities.IIdentity;
+import org.apache.aurora.scheduler.storage.entities.IInstance;
 import org.apache.aurora.scheduler.storage.entities.IJobConfiguration;
 import org.apache.aurora.scheduler.storage.entities.IMesosContainer;
 import org.apache.aurora.scheduler.storage.entities.IResource;
@@ -187,6 +191,21 @@ public class ConfigurationManager {
     }
 
     JobConfiguration builder = job.newBuilder();
+
+    /* This if was added to prevent Aurora tests from failing
+    when instanceCount does not match the number of instances passed.
+    This happens specifically for tests using Mesos Containers, and should
+    be fixed in the tests to remove the if.
+    */
+    if(job.getTaskConfig().getContainer().isSetDocker()){
+      ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+      if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
+        // specified instanceCount must match number of instances
+        throw new TaskDescriptionException(String.format(
+                "Job instanceCount %s doesn't match number of instances %s",
+                job.getInstanceCount(), instances.size()));
+      }
+    }
 
     if (!JobKeys.isValid(job.getKey())) {
       throw new TaskDescriptionException("Job key " + job.getKey() + " is invalid.");
@@ -392,6 +411,7 @@ public class ConfigurationManager {
             "Only " + dedicatedRole + " may use hosts dedicated for that role.");
       }
     }
+    InstanceVariablesSubstitutor.validate(config);
 
     Optional<Container._Fields> containerType;
     if (config.isSetContainer()) {
@@ -401,19 +421,23 @@ public class ConfigurationManager {
         if (!containerConfig.getDocker().isSetImage()) {
           throw new TaskDescriptionException("A container must specify an image.");
         }
-        if (containerConfig.getDocker().getParameters().isEmpty()) {
-          builder.getContainer().getDocker()
-              .setParameters(ImmutableList.copyOf(settings.defaultDockerParameters));
-        } else {
-          if (!settings.allowDockerParameters) {
-            throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
-          }
-        }
 
+        if (!settings.allowDockerParameters && !builder.getContainer().getDocker().getParameters().isEmpty()) {
+          throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
+        }
+        if (!settings.defaultDockerParameters.isEmpty()) {
+          List<DockerParameter> parameters = new ArrayList<>();
+          List<DockerParameter> defaultParameters = settings.defaultDockerParameters
+                  .stream().map(e -> new DockerParameter(e.getName(), e.getValue())).collect(Collectors.toList());
+          parameters.addAll(defaultParameters);
+          parameters.addAll(builder.getContainer().getDocker().getParameters());
+          builder.getContainer().getDocker().setParameters(parameters);
+        }
         if (settings.requireDockerUseExecutor && !config.isSetExecutorConfig()) {
           throw new TaskDescriptionException(EXECUTOR_REQUIRED_WITH_DOCKER);
         }
       }
+
     } else {
       // Default to mesos container type if unset.
       containerType = Optional.of(Container._Fields.MESOS);
@@ -469,6 +493,14 @@ public class ConfigurationManager {
       if (!settings.allowContainerVolumes && !container.getVolumes().isEmpty()) {
         throw new TaskDescriptionException(NO_CONTAINER_VOLUMES);
       }
+    }
+
+    if (config.isSetKillPolicy() && config.getKillPolicy().getGracePeriodSecs() < 0) {
+      throw new TaskDescriptionException("Grace Period should be greater than 0");
+    }
+
+    if (config.isSetHealthCheck() && !(config.getHealthCheck().isSetHttp() ^ config.getHealthCheck().isSetShell())) {
+      throw new TaskDescriptionException("Provide exactly one health checker: http or shell");
     }
 
     validateSlaPolicy(builder, instanceCount);

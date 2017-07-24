@@ -37,7 +37,7 @@ class HostMaintenance(object):
 
   SLA_MIN_JOB_INSTANCE_COUNT = 20
   STATUS_POLL_INTERVAL = Amount(5, Time.SECONDS)
-  MAX_STATUS_WAIT = Amount(5, Time.MINUTES)
+  MAX_STATUS_WAIT = Amount(30, Time.MINUTES)
 
   @classmethod
   def iter_batches(cls, hostnames, grouping_function=DEFAULT_GROUPING):
