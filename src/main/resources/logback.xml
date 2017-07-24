@@ -34,7 +34,7 @@ limitations under the License.
   <logger name="h2database" level="warn">
   </logger>
 
-  <root level="info">
+  <root level="warn">
     <appender-ref ref="STDERR" />
   </root>
 </configuration>

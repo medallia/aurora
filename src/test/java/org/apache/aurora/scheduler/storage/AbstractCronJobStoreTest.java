@@ -29,6 +29,7 @@ import org.apache.aurora.scheduler.base.JobKeys;
 import org.apache.aurora.scheduler.base.TaskTestUtil;
 import org.apache.aurora.scheduler.base.Tasks;
 import org.apache.aurora.scheduler.storage.Storage.MutateWork.NoResult;
+import org.apache.aurora.scheduler.storage.entities.IHealthCheck;
 import org.apache.aurora.scheduler.storage.entities.IJobConfiguration;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.IScheduledTask;
@@ -142,7 +143,8 @@ public abstract class AbstractCronJobStoreTest {
                 .setCronSchedule("schedule")
                 .setCronCollisionPolicy(CronCollisionPolicy.CANCEL_NEW)
                 .setTaskConfig(config.newBuilder())
-                .setInstanceCount(5)));
+                .setInstanceCount(5)), 
+            StorageEntityUtil.getField(IHealthCheck.class, "http"));
   }
 
   private Set<IJobConfiguration> fetchJobs() {

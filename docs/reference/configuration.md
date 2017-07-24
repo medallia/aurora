@@ -360,6 +360,7 @@ Job Schema
   ```partition_policy``` | ```PartitionPolicy``` object | An optional partition policy that allows job owners to define how to handle partitions for running tasks (in partition-aware Aurora clusters)
   ```metadata``` | list of ```Metadata``` objects | list of ```Metadata``` objects for user's customized metadata information.
   ```executor_config``` | ```ExecutorConfig``` object | Allows choosing an alternative executor defined in `custom_executor_config` to be used instead of Thermos. Tasks will be launched with Thermos as the executor by default. See [Custom Executors](../features/custom-executors.md) for more info.
+  ```instance_variables``` | List(Instance) | A list of instances containing variable values to use in Docker Parameters or process cmdline.
   ```sla_policy``` |  Choice of ```CountSlaPolicy```, ```PercentageSlaPolicy``` or ```CoordinatorSlaPolicy``` object | An optional SLA policy that allows job owners to describe the SLA requirements for the job. See [SlaPolicy Objects](#slapolicy-objects) for more information.
 
 
@@ -595,7 +596,20 @@ See [Docker Command Line Reference](https://docs.docker.com/reference/commandlin
   ```graceful_shutdown_wait_secs``` | Integer | The amount of time (in seconds) to wait after hitting the ```graceful_shutdown_endpoint``` before proceeding with the [task termination lifecycle](https://aurora.apache.org/documentation/latest/reference/task-lifecycle/#forceful-termination-killing-restarting). (Default: 5)
   ```shutdown_wait_secs```          | Integer | The amount of time (in seconds) to wait after hitting the ```shutdown_endpoint``` before proceeding with the [task termination lifecycle](https://aurora.apache.org/documentation/latest/reference/task-lifecycle/#forceful-termination-killing-restarting). (Default: 5)
 
-#### graceful\_shutdown\_endpoint
+### Instance Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```variables``` | List(Variable)  | A list of Variables for this Instance
+
+### Variable Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```name```      | String          | The name of the variable
+  ```value```     | String          | The value to replace in a Instance Docker Parameters
+
+#### graceful_shutdown_endpoint
 
 If the Job is listening on the port as specified by the HttpLifecycleConfig
 (default: `health`), a HTTP POST request will be sent over localhost to this

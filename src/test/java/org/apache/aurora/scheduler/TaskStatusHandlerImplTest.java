@@ -218,7 +218,8 @@ public class TaskStatusHandlerImplTest extends EasyMockTest {
 
   @Test
   public void testSuppressUnregisteredExecutorMessage() throws Exception {
-    storageUtil.expectWrite();
+    storageUtil.expectOperations();
+    storageUtil.expectTaskFetch(TASK_ID_A); // we inspect the task healthcheck to overwrite the kill message 
 
     TaskStatus status = TaskStatus.newBuilder()
         .setState(TaskState.TASK_KILLED)
