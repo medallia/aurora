@@ -13,8 +13,10 @@
  */
 package org.apache.aurora.scheduler.configuration;
 
-import java.util.List;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
+
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -323,19 +325,23 @@ public class ConfigurationManager {
         if (!containerConfig.getDocker().isSetImage()) {
           throw new TaskDescriptionException("A container must specify an image.");
         }
-        if (containerConfig.getDocker().getParameters().isEmpty()) {
-          builder.getContainer().getDocker()
-              .setParameters(ImmutableList.copyOf(settings.defaultDockerParameters));
-        } else {
-          if (!settings.allowDockerParameters) {
-            throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
-          }
-        }
 
+        if (!settings.allowDockerParameters && !builder.getContainer().getDocker().getParameters().isEmpty()) {
+          throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
+        }
+        if (!settings.defaultDockerParameters.isEmpty()) {
+          List<DockerParameter> parameters = new ArrayList<>();
+          List<DockerParameter> defaultParameters = settings.defaultDockerParameters
+                  .stream().map(e -> new DockerParameter(e.getName(), e.getValue())).collect(Collectors.toList());
+          parameters.addAll(defaultParameters);
+          parameters.addAll(builder.getContainer().getDocker().getParameters());
+          builder.getContainer().getDocker().setParameters(parameters);
+        }
         if (settings.requireDockerUseExecutor && !config.isSetExecutorConfig()) {
           throw new TaskDescriptionException(EXECUTOR_REQUIRED_WITH_DOCKER);
         }
       }
+
     } else {
       // Default to mesos container type if unset.
       containerType = Optional.of(Container._Fields.MESOS);
