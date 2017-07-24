@@ -23,10 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 
 import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.DockerParameter;
@@ -41,6 +38,8 @@ import org.apache.aurora.scheduler.resources.ResourceManager;
 import org.apache.aurora.scheduler.resources.ResourceType;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IContainer;
+import org.apache.aurora.scheduler.storage.entities.IIdentity;
+import org.apache.aurora.scheduler.storage.entities.IInstance;
 import org.apache.aurora.scheduler.storage.entities.IJobConfiguration;
 import org.apache.aurora.scheduler.storage.entities.IMesosContainer;
 import org.apache.aurora.scheduler.storage.entities.IResource;
@@ -175,6 +174,16 @@ public class ConfigurationManager {
 
     JobConfiguration builder = job.newBuilder();
 
+    if(job.getTaskConfig().getContainer().isSetDocker()){
+      ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+      if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
+        // specified instanceCount must match number of instances
+        throw new TaskDescriptionException(String.format(
+                "Job instanceCount %s doesn't match number of instances %s",
+                job.getInstanceCount(), instances.size()));
+      }
+    }
+
     if (!JobKeys.isValid(job.getKey())) {
       throw new TaskDescriptionException("Job key " + job.getKey() + " is invalid.");
     }
@@ -284,6 +293,7 @@ public class ConfigurationManager {
             "Only " + dedicatedRole + " may use hosts dedicated for that role.");
       }
     }
+    InstanceVariablesSubstitutor.validate(config);
 
     Optional<Container._Fields> containerType;
     if (config.isSetContainer()) {
