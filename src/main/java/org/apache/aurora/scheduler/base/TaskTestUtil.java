@@ -28,6 +28,7 @@ import org.apache.aurora.gen.Container._Fields;
 import org.apache.aurora.gen.DockerContainer;
 import org.apache.aurora.gen.DockerParameter;
 import org.apache.aurora.gen.Identity;
+import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.LimitConstraint;
 import org.apache.aurora.gen.MesosFetcherURI;
 import org.apache.aurora.gen.Metadata;
@@ -38,6 +39,7 @@ import org.apache.aurora.gen.TaskConfig;
 import org.apache.aurora.gen.TaskConstraint;
 import org.apache.aurora.gen.TaskEvent;
 import org.apache.aurora.gen.ValueConstraint;
+import org.apache.aurora.gen.Variable;
 import org.apache.aurora.gen.apiConstants;
 import org.apache.aurora.scheduler.TierInfo;
 import org.apache.aurora.scheduler.TierManager;
@@ -139,6 +141,7 @@ public final class TaskTestUtil {
         .setExecutorConfig(new org.apache.aurora.gen.ExecutorConfig(
             EXECUTOR_INFO.getName(),
             "config"))
+        .setInstances(ImmutableList.of(new Instance(ImmutableList.of(new Variable("foo", "bar")))))
         .setContainer(Container.docker(
             new DockerContainer("imagename")
                 .setParameters(ImmutableList.of(

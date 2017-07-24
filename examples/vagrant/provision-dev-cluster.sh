@@ -34,7 +34,6 @@ function install_cluster_config {
 
 function install_ssh_config {
   cat >> /etc/ssh/ssh_config <<EOF
-
 # Allow local ssh w/out strict host checking
 Host *
     StrictHostKeyChecking no
@@ -86,6 +85,8 @@ EOF
   chmod +x /usr/local/bin/update-sources
   update-sources > /dev/null
   chown -R vagrant:vagrant /home/vagrant
+  echo "60mins">/etc/mesos-slave/executor_registration_timeout
+  echo "{}" > /root/.dockercfg
 }
 
 prepare_sources

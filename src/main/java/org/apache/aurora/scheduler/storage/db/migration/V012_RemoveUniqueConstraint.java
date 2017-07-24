@@ -17,37 +17,25 @@ import java.math.BigDecimal;
 
 import org.apache.ibatis.migration.MigrationScript;
 
-public class V009_CreateContainerVolumesTable implements MigrationScript {
+public class V012_RemoveUniqueConstraint implements MigrationScript {
   @Override
   public BigDecimal getId() {
-    return BigDecimal.valueOf(9L);
+    return BigDecimal.valueOf(12L);
   }
 
   @Override
   public String getDescription() {
-    return "Create the task_config_volumes and volume_modes tables";
+    return "Remove unique constraint in task_config_volumes";
   }
 
   @Override
   public String getUpScript() {
-    return "CREATE TABLE IF NOT EXISTS volume_modes("
-        + "id INT PRIMARY KEY,"
-        + "name VARCHAR NOT NULL,"
-        + "UNIQUE(name)"
-        + ");"
-        + "CREATE TABLE IF NOT EXISTS task_config_volumes("
-        + "id IDENTITY,"
-        + "task_config_id BIGINT NOT NULL REFERENCES task_configs(id) ON DELETE CASCADE,"
-        + "host_path VARCHAR NOT NULL,"
-        + "container_path VARCHAR NOT NULL,"
-        + "mode INT NOT NULL REFERENCES volume_modes(id),"
-        + "UNIQUE(task_config_id)"
-        + ");";
+    // The constraint name is taken from the schema so it is always constant.
+    return "ALTER TABLE IF EXISTS task_config_volumes DROP CONSTRAINT IF EXISTS CONSTRAINT_654B;";
   }
 
   @Override
   public String getDownScript() {
-    return "DROP TABLE IF EXISTS volume_modes;"
-        + "DROP TABLE IF EXISTS task_config_volumes;";
+    return "ALTER TABLE IF EXISTS task_config_volumes ADD UNIQUE(task_config_id);";
   }
 }
