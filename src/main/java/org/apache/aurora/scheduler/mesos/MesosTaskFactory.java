@@ -13,6 +13,7 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,8 +52,10 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.DiscoveryInfo;
+import org.apache.mesos.Protos.DurationInfo;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.KillPolicy;
 import org.apache.mesos.Protos.Label;
 import org.apache.mesos.Protos.Labels;
 import org.apache.mesos.Protos.Offer;
@@ -60,6 +63,7 @@ import org.apache.mesos.Protos.Port;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,9 +218,20 @@ public interface MesosTaskFactory {
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
         configureTaskForDockerContainer(task, config, taskBuilder, acceptedOffer);
+        if (config.isSetKillPolicy()) {
+          DurationInfo.Builder durationBuilder;
+          durationBuilder = DurationInfo.newBuilder()
+                  .setNanoseconds(Duration.ofSeconds(
+                          config.getKillPolicy().getGracePeriodSecs()).toNanos());
+
+          KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
+                  .setGracePeriod(durationBuilder.build());
+          taskBuilder.setKillPolicy(killPolicyBuilder.build());
+        }
         return taskBuilder.build();
         /* TODO: Add support for command line arguments for docker*/
         /*IDockerContainer dockerContainer = config.getContainer().getDocker();
+
         if (config.isSetExecutorConfig()) {
           ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
               .setContainer(getDockerContainerInfo(
@@ -228,6 +243,7 @@ public interface MesosTaskFactory {
           taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
               .setCommand(CommandInfo.newBuilder().setShell(false));
         }*/
+
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
