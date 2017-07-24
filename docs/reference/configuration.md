@@ -359,6 +359,7 @@ Job Schema
   ```partition_policy``` | ```PartitionPolicy``` object | An optional partition policy that allows job owners to define how to handle partitions for running tasks (in partition-aware Aurora clusters)
   ```metadata``` | list of ```Metadata``` objects | list of ```Metadata``` objects for user's customized metadata information.
   ```executor_config``` | ```ExecutorConfig``` object | Allows choosing an alternative executor defined in `custom_executor_config` to be used instead of Thermos. Tasks will be launched with Thermos as the executor by default. See [Custom Executors](../features/custom-executors.md) for more info.
+  ```instance_variables``` | List(Instance) | A list of instances containing variable values to use in Docker Parameters or process cmdline.
 
 
 ### UpdateConfig Objects
@@ -563,6 +564,19 @@ See [Docker Command Line Reference](https://docs.docker.com/reference/commandlin
   ```shutdown_endpoint```           | String  | Endpoint to hit to give a task its final warning before being killed. (Default: /abortabortabort)
   ```graceful_shutdown_wait_secs``` | Integer | The amount of time (in seconds) to wait after hitting the ```graceful_shutdown_endpoint``` before proceeding with the [task termination lifecycle](https://aurora.apache.org/documentation/latest/reference/task-lifecycle/#forceful-termination-killing-restarting). (Default: 5)
   ```shutdown_wait_secs```          | Integer | The amount of time (in seconds) to wait after hitting the ```shutdown_endpoint``` before proceeding with the [task termination lifecycle](https://aurora.apache.org/documentation/latest/reference/task-lifecycle/#forceful-termination-killing-restarting). (Default: 5)
+
+### Instance Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```variables``` | List(Variable)  | A list of Variables for this Instance
+
+### Variable Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```name```      | String          | The name of the variable
+  ```value```     | String          | The value to replace in a Instance Docker Parameters
 
 #### graceful_shutdown_endpoint
 

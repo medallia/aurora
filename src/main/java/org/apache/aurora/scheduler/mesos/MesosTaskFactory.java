@@ -197,18 +197,8 @@ public interface MesosTaskFactory {
 
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
-        IDockerContainer dockerContainer = config.getContainer().getDocker();
-        if (config.isSetExecutorConfig()) {
-          ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
-              .setContainer(getDockerContainerInfo(
-                  dockerContainer,
-                  Optional.of(getExecutorName(task))));
-          taskBuilder.setExecutor(execBuilder.build());
-        } else {
-          LOG.warn("Running Docker-based task without an executor.");
-          taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.empty()))
-              .setCommand(CommandInfo.newBuilder().setShell(false));
-        }
+        DockerContainerTasks.configureTask(task, taskBuilder, serverInfo);
+
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
