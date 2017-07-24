@@ -40,20 +40,26 @@ from gen.apache.aurora.api.ttypes import (
     DockerImage,
     DockerParameter,
     ExecutorConfig,
+    HealthCheck,
+    HttpHealthChecker,
     Identity,
+    Instance,
     Image,
     JobConfiguration,
     JobKey,
+    KillPolicy,
     LimitConstraint,
     MesosContainer,
     Metadata,
     Mode,
     PartitionPolicy,
     Resource,
+    ShellHealthChecker,
     TaskConfig,
     TaskConstraint,
     ValueConstraint,
-    Volume
+    Volume,
+    Variable
 )
 
 __all__ = (
@@ -295,6 +301,10 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       fully_interpolated(task_raw.resources().ram()),
       fully_interpolated(task_raw.resources().disk())))
 
+  task.killPolicy = KillPolicy(gracePeriodSecs=fully_interpolated(task_raw.finalization_wait()))
+  if job.health_check_config() is not Empty:
+    task.healthCheck = convert_health_check(job.health_check_config())
+
   numCpus = fully_interpolated(task_raw.resources().cpu())
   ramMb = fully_interpolated(task_raw.resources().ram()) / MB
   diskMb = fully_interpolated(task_raw.resources().disk()) / MB
@@ -316,6 +326,22 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
   task.constraints = constraints_to_thrift(not_empty_or(job.constraints(), {}))
   task.container = create_container_config(job.container())
 
+  numberOfInstances = fully_interpolated(job.instances())
+  numberOfConfig = len(fully_interpolated(job.instance_variables()))
+  if numberOfConfig > 0 and numberOfInstances != numberOfConfig:
+    raise InvalidConfig(("instances value %s doesn't match the number of "
+                        + "instance_variables definitions %s.") % (numberOfInstances,
+                                                                     numberOfConfig))
+
+  instances = list()
+  for pinstance in fully_interpolated(job.instance_variables()):
+    instance = Instance()
+    instance.variables = list()
+    for va in pinstance['variables']:
+      instance.variables.append(Variable(va['name'], va['value']))
+    instances.append(instance)
+
+  task.instances = instances
   underlying, refs = job.interpolate()
 
   # need to fake an instance id for the sake of schema checking
@@ -354,4 +380,18 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       cronSchedule=not_empty_or(job.cron_schedule(), None),
       cronCollisionPolicy=select_cron_policy(job.cron_collision_policy()),
       taskConfig=task,
-      instanceCount=fully_interpolated(job.instances()))
+      instanceCount=numberOfInstances)
+
+def convert_health_check(job_health_check):
+    hc = HealthCheck()
+    hc.grace_period_seconds = fully_interpolated(job_health_check.initial_interval_secs())
+    hc.delaySeconds= fully_interpolated(job_health_check.initial_interval_secs())
+    hc.interval_seconds = fully_interpolated(job_health_check.interval_secs())
+    hc.max_consecutive_failures = fully_interpolated(job_health_check.max_consecutive_failures())
+    if job_health_check.health_checker().http() is not Empty:
+      hc.http = HttpHealthChecker(endpoint=fully_interpolated(job_health_check.health_checker().http().endpoint()))
+    elif job_health_check.health_checker().shell() is not Empty:
+      hc.shell = ShellHealthChecker(command=fully_interpolated(job_health_check.health_checker().shell().shell_command()))
+    else:
+      raise InvalidConfig("Config doesn't contain a valid HealthChecker. Include an http or shell checker.")
+    return hc

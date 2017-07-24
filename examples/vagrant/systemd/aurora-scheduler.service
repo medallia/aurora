@@ -46,6 +46,7 @@ ExecStart=/home/vagrant/aurora/dist/install/aurora-scheduler/bin/aurora-schedule
   -global_container_mounts=/home/vagrant/aurora/examples/vagrant/config:/home/vagrant/aurora/examples/vagrant/config:ro,/home/vagrant/aurora/.auroraversion:/home/vagrant/aurora/.auroraversion:ro \
   -thermos_executor_flags="--announcer-ensemble localhost:2181 --announcer-zookeeper-auth-config /home/vagrant/aurora/examples/vagrant/config/announcer-auth.json --mesos-containerizer-path=/usr/libexec/mesos/mesos-containerizer" \
   -allowed_container_types=MESOS,DOCKER \
+  -allow_docker_parameters=true \
   -http_authentication_mechanism=BASIC \
   -shiro_ini_path=etc/shiro.example.ini \
   -tier_config=/home/vagrant/aurora/src/main/resources/org/apache/aurora/scheduler/tiers.json \

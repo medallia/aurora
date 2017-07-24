@@ -44,6 +44,7 @@ import org.apache.aurora.gen.AppcImage;
 import org.apache.aurora.gen.Attribute;
 import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.DockerImage;
+import org.apache.aurora.gen.HealthCheck;
 import org.apache.aurora.gen.HostAttributes;
 import org.apache.aurora.gen.Image;
 import org.apache.aurora.gen.MaintenanceMode;
@@ -147,7 +148,8 @@ public abstract class AbstractTaskStoreTest extends TearDownTestCase {
   @Test
   public void testSave() {
     IScheduledTask aWithHost = setHost(TASK_A, HOST_A);
-    StorageEntityUtil.assertFullyPopulated(aWithHost.newBuilder());
+    StorageEntityUtil.assertFullyPopulated(aWithHost.newBuilder(),
+            StorageEntityUtil.getField(HealthCheck.class, "http"));
 
     saveTasks(aWithHost, TASK_B);
     assertStoreContents(aWithHost, TASK_B);

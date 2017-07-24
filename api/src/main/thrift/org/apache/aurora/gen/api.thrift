@@ -217,6 +217,17 @@ struct DockerParameter {
   2: string value
 }
 
+/** Describes a variable to be interpolated in the configuration of a task instance. */
+struct Variable {
+	1: string name
+	2: string value
+}
+
+/** Describes a task instance that contains variables to be interpolated in the parameterized configuration. */
+struct Instance {
+	1: list<Variable> variables
+}
+
 /** Describes a docker container */
 struct DockerContainer {
   /** The container image to be run */
@@ -245,6 +256,60 @@ struct PartitionPolicy {
   2: optional i64 delaySecs
 }
 
+/** Describes a Mesos Kill Policy */
+struct KillPolicy {
+  /** The time to wait for a task to gracefully terminate before killing it */
+  1: i64 gracePeriodSecs
+}
+
+// http request healthchecker
+struct HttpHealthChecker {
+  1: string endpoint
+  2: i32 port
+}
+
+// Health checker that runs a shell command. Any return type other tan zero is considered a faulty check. Output of
+// the command is logged to stdout and stderr.
+struct ShellHealthChecker {
+  1: string command
+}
+
+/** Describe a Mesos command Health check */
+struct HealthCheck {
+
+  // Amount of time to wait to start health checking the task after it
+  // transitions to `TASK_RUNNING` or `TASK_STAGING` if the latter is
+  // used by the executor. [default = 15.0]
+  1: optional double delaySeconds = 15
+
+  // Interval between health checks, i.e., amount of time to wait after
+  // the previous health check finished or timed out to start the next
+  // health check. [default = 10.0]
+  2: optional double intervalSeconds = 10
+
+  // Amount of time to wait for the health check to complete. After this
+  // timeout, the health check is aborted and treated as a failure. Zero
+  // means infinite timeout. [default = 20.0]
+  3: optional double timeoutSeconds = 20
+
+  // Number of consecutive failures until the task is killed by the executor. [default = 3]
+  4: optional i32 consecutiveFailures = 3
+
+  // Amount of time after the task is launched during which health check
+  // failures are ignored. Once a check succeeds for the first time,
+  // the grace period does not apply anymore. Note that it includes
+  // `delay_seconds`, i.e., setting `grace_period_seconds` < `delay_seconds`
+  // has no effect. [default = 10.0]
+  5: optional double gracePeriodSeconds = 10
+
+  // HTTP health check
+  6: optional HttpHealthChecker http
+
+  // Command health check
+  7: optional ShellHealthChecker shell
+
+}
+
 /** Description of the tasks contained within a job. */
 struct TaskConfig {
  /** Job task belongs to. */
@@ -260,6 +325,10 @@ struct TaskConfig {
  18: optional bool production
  /** Task tier type. */
  30: optional string tier
+ /** A Mesos Kill Policy for the task*/
+ 15: optional KillPolicy killPolicy
+ 50: optional HealthCheck healthCheck
+
  /** All resources required to run a task. */
  32: set<Resource> resources
 
@@ -279,6 +348,8 @@ struct TaskConfig {
  27: optional set<Metadata> metadata
  /** Policy for how to deal with task partitions */
  34: optional PartitionPolicy partitionPolicy
+ /** Instances with variables to Interpolate in the TaskConfig */
+ 31: optional list<Instance> instances
 
  // This field is deliberately placed at the end to work around a bug in the immutable wrapper
  // code generator.  See AURORA-1185 for details.
