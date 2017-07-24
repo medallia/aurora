@@ -13,6 +13,7 @@
  */
 package org.apache.aurora.scheduler.mesos;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,18 +24,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.apache.aurora.GuavaUtils;
 import org.apache.aurora.common.testing.easymock.EasyMockTest;
-import org.apache.aurora.gen.AppcImage;
-import org.apache.aurora.gen.AssignedTask;
-import org.apache.aurora.gen.Container;
-import org.apache.aurora.gen.DockerContainer;
-import org.apache.aurora.gen.DockerImage;
-import org.apache.aurora.gen.DockerParameter;
-import org.apache.aurora.gen.Instance;
-import org.apache.aurora.gen.Image;
-import org.apache.aurora.gen.MesosContainer;
-import org.apache.aurora.gen.ServerInfo;
-import org.apache.aurora.gen.TaskConfig;
-import org.apache.aurora.gen.Variable;
+import org.apache.aurora.gen.*;
 import org.apache.aurora.scheduler.TierManager;
 import org.apache.aurora.scheduler.base.TaskTestUtil;
 import org.apache.aurora.scheduler.configuration.executor.ExecutorConfig;
@@ -578,5 +568,54 @@ public class MesosTaskFactoryImplTest extends EasyMockTest {
                 .setMode(Mode.RO))
             .build(),
         task.getExecutor().getContainer());
+  }
+
+  @Test
+  public void testKillPolicySet() throws Exception {
+    AssignedTask builder = TASK.newBuilder();
+    builder.getTask()
+            .setKillPolicy(new KillPolicy(45L))
+            .setContainer(Container.docker(new DockerContainer()
+                    .setImage("hello-world")))
+            .unsetExecutorConfig();
+
+    TaskInfo task = getDockerTaskInfo(IAssignedTask.build(builder));
+    assertTrue(task.hasCommand());
+    assertFalse(task.getCommand().getShell());
+    assertFalse(task.hasData());
+    assertTrue(task.hasKillPolicy());
+    assertEquals(task.getKillPolicy().getGracePeriod().getNanoseconds(), Duration.ofSeconds(45L).toNanos());
+    ContainerInfo expectedContainer = ContainerInfo.newBuilder()
+            .setType(Type.DOCKER)
+            .setDocker(DockerInfo.newBuilder()
+                    .setImage("hello-world"))
+            .build();
+    assertEquals(expectedContainer, task.getContainer());
+    checkDiscoveryInfoUnset(task);
+  }
+
+  @Test
+  public void testKillPolicySetAndunSet() throws Exception {
+    AssignedTask builder = TASK.newBuilder();
+    builder.getTask()
+            .setKillPolicy(new KillPolicy(45L))
+            .unsetKillPolicy();
+    builder.getTask()
+            .setContainer(Container.docker(new DockerContainer()
+                    .setImage("hello-world")))
+            .unsetExecutorConfig();
+
+    TaskInfo task = getDockerTaskInfo(IAssignedTask.build(builder));
+    assertTrue(task.hasCommand());
+    assertFalse(task.getCommand().getShell());
+    assertFalse(task.hasData());
+    assertFalse(task.hasKillPolicy());
+    ContainerInfo expectedContainer = ContainerInfo.newBuilder()
+            .setType(Type.DOCKER)
+            .setDocker(DockerInfo.newBuilder()
+                    .setImage("hello-world"))
+            .build();
+    assertEquals(expectedContainer, task.getContainer());
+    checkDiscoveryInfoUnset(task);
   }
 }
