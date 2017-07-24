@@ -356,6 +356,7 @@ Job Schema
   ```tier``` | String | Task tier type. The default scheduler tier configuration allows for 3 tiers: `revocable`, `preemptible`, and `preferred`. If a tier is not elected, Aurora assigns the task to a tier based on its choice of `production` (that is `preferred` for production and `preemptible` for non-production jobs). See the section on [Configuration Tiers](../features/multitenancy.md#configuration-tiers) for more information.
   ```announce``` | ```Announcer``` object | Optionally enable Zookeeper ServerSet announcements. See [Announcer Objects] for more information.
   ```enable_hooks``` | Boolean | Whether to enable [Client Hooks](client-hooks.md) for this job. (Default: False)
+  ```instance_variables``` | List(Instance) | A list of instances containing variable values to use in Docker Parameters or process cmdline.
 
 
 ### UpdateConfig Objects
@@ -524,6 +525,19 @@ See [Docker Command Line Reference](https://docs.docker.com/reference/commandlin
   ```port```     | String          | The named port to send POST commands (Default: health)
   ```graceful_shutdown_endpoint``` | String | Endpoint to hit to indicate that a task should gracefully shutdown. (Default: /quitquitquit)
   ```shutdown_endpoint``` | String | Endpoint to hit to give a task its final warning before being killed. (Default: /abortabortabort)
+
+### Instance Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```variables``` | List(Variable)  | A list of Variables for this Instance
+
+### Variable Objects
+
+  param           | type            | description
+  -----           | :----:          | -----------
+  ```name```      | String          | The name of the variable
+  ```value```     | String          | The value to replace in a Instance Docker Parameters
 
 #### graceful_shutdown_endpoint
 

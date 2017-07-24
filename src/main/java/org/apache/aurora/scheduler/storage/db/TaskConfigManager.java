@@ -25,17 +25,22 @@ import org.apache.aurora.scheduler.storage.db.views.DbTaskConfig;
 import org.apache.aurora.scheduler.storage.entities.IAppcImage;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
+import org.apache.aurora.scheduler.storage.entities.IInstance;
 import org.apache.aurora.scheduler.storage.entities.IDockerImage;
 import org.apache.aurora.scheduler.storage.entities.IImage;
 import org.apache.aurora.scheduler.storage.entities.IMesosContainer;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.aurora.scheduler.storage.entities.IValueConstraint;
+import org.apache.aurora.scheduler.storage.entities.IVariable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
 class TaskConfigManager {
   private final TaskConfigMapper configMapper;
   private final JobKeyMapper jobKeyMapper;
+  private static final Logger LOG = LoggerFactory.getLogger(TaskConfigManager.class);
 
   @Inject
   TaskConfigManager(TaskConfigMapper configMapper, JobKeyMapper jobKeyMapper) {
@@ -115,6 +120,15 @@ class TaskConfigManager {
       configMapper.insertMetadata(configInsert.getId(), config.getMetadata());
     }
 
+    if (!config.getInstances().isEmpty()) {
+        for (IInstance instance : config.getInstances()) {
+          InsertResult instanceInsert = new InsertResult();
+          configMapper.insertInstance(configInsert.getId(), instanceInsert);
+          for (IVariable variable : instance.getVariables()) {
+            configMapper.insertInstanceVariables(instanceInsert.getId(), variable);
+          }
+        }
+    }
     if (!config.getMesosFetcherUris().isEmpty()) {
       configMapper.insertMesosFetcherUris(configInsert.getId(), config.getMesosFetcherUris());
     }
