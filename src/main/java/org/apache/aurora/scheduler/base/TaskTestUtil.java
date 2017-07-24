@@ -30,6 +30,7 @@ import org.apache.aurora.gen.DockerContainer;
 import org.apache.aurora.gen.DockerParameter;
 import org.apache.aurora.gen.Identity;
 import org.apache.aurora.gen.Instance;
+import org.apache.aurora.gen.KillPolicy;
 import org.apache.aurora.gen.LimitConstraint;
 import org.apache.aurora.gen.MesosFetcherURI;
 import org.apache.aurora.gen.Metadata;
@@ -152,7 +153,8 @@ public final class TaskTestUtil {
             Resource.numCpus(1.0),
             Resource.ramMb(1024),
             Resource.diskMb(1024),
-            Resource.namedPort("http"))));
+            Resource.namedPort("http")))
+        .setKillPolicy(new KillPolicy(1L)));
   }
 
   public static IScheduledTask makeTask(String id, IJobKey job) {

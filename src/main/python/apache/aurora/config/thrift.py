@@ -45,6 +45,7 @@ from gen.apache.aurora.api.ttypes import (
     Image,
     JobConfiguration,
     JobKey,
+    KillPolicy,
     LimitConstraint,
     MesosContainer,
     Metadata,
@@ -282,6 +283,8 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
     raise InvalidConfig('Must specify ram and disk resources, got ram:%r disk:%r' % (
       fully_interpolated(task_raw.resources().ram()),
       fully_interpolated(task_raw.resources().disk())))
+
+  task.killPolicy = KillPolicy(gracePeriodSecs=fully_interpolated(task_raw.finalization_wait()))
 
   numCpus = fully_interpolated(task_raw.resources().cpu())
   ramMb = fully_interpolated(task_raw.resources().ram()) / MB
