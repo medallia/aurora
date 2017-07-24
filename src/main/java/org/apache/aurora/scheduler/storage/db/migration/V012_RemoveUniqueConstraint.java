@@ -17,10 +17,10 @@ import java.math.BigDecimal;
 
 import org.apache.ibatis.migration.MigrationScript;
 
-public class V010_RemoveUniqueConstraint implements MigrationScript {
+public class V012_RemoveUniqueConstraint implements MigrationScript {
   @Override
   public BigDecimal getId() {
-    return BigDecimal.valueOf(10L);
+    return BigDecimal.valueOf(12L);
   }
 
   @Override

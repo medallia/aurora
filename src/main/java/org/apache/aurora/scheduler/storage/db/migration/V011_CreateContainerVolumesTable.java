@@ -17,10 +17,10 @@ import java.math.BigDecimal;
 
 import org.apache.ibatis.migration.MigrationScript;
 
-public class V009_CreateContainerVolumesTable implements MigrationScript {
+public class V011_CreateContainerVolumesTable implements MigrationScript {
   @Override
   public BigDecimal getId() {
-    return BigDecimal.valueOf(9L);
+    return BigDecimal.valueOf(11L);
   }
 
   @Override
