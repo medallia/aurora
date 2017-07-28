@@ -45,6 +45,7 @@ org/apache/aurora/scheduler/log/mesos/MesosLogStreamModule
 org/apache/aurora/scheduler/log/mesos/MesosLogStreamModule$3
 org/apache/aurora/scheduler/log/mesos/MesosLogStreamModule$4
 org/apache/aurora/scheduler/log/mesos/MesosLogStreamModule$5
+org/apache/aurora/scheduler/mesos/DockerContainerTasks
 org/apache/aurora/scheduler/mesos/DriverFactoryImpl
 org/apache/aurora/scheduler/mesos/LibMesosLoadingModule
 org/apache/aurora/scheduler/stats/AsyncStatsModule$OfferAdapter$1
