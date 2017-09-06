@@ -100,11 +100,11 @@ class Task(Struct):
   # optionals
   constraints = Default(List(Constraint), [])
   resources = Resources
-  max_failures = Default(Integer, 1)        # maximum number of failed processes before task is failed.
-  max_concurrency = Default(Integer, 0)     # 0 is infinite concurrency.
-                                            # > 0 is max concurrent processes.
-  finalization_wait = Default(Integer, 30)  # the amount of time in seconds we allocate to run the
-                                            # finalization schedule.
+  max_failures = Default(Integer, 1)          # maximum number of failed processes before task is failed.
+  max_concurrency = Default(Integer, 0)       # 0 is infinite concurrency.
+                                              # > 0 is max concurrent processes.
+  finalization_wait = Default(Integer, 3600)  # the amount of time in seconds we allocate to run the
+                                              # finalization schedule.
 
   # TODO(jon): remove/replace with proper solution to MESOS-3546
   user = String
