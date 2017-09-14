@@ -159,7 +159,7 @@ public class TaskAssignerImplTest extends EasyMockTest {
 
   @Test
   public void testAssignPartialNoVetoes() throws Exception {
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(OFFER));
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(OFFER));
     offerManager.launchTask(MESOS_OFFER.getId(), TASK_INFO);
     expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
     expect(filter.filter(UNUSED, resourceRequest)).andReturn(ImmutableSet.of());
@@ -185,7 +185,7 @@ public class TaskAssignerImplTest extends EasyMockTest {
 
   @Test
   public void testAssignVetoesWithStaticBan() throws Exception {
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(OFFER));
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(OFFER));
     offerManager.banOffer(MESOS_OFFER.getId(), GROUP_KEY);
     expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
     expect(filter.filter(UNUSED, resourceRequest))
@@ -207,7 +207,7 @@ public class TaskAssignerImplTest extends EasyMockTest {
 
   @Test
   public void testAssignVetoesWithNoStaticBan() throws Exception {
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(OFFER));
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(OFFER));
     expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
     expect(filter.filter(UNUSED, resourceRequest))
         .andReturn(ImmutableSet.of(Veto.unsatisfiedLimit("limit")));
@@ -228,7 +228,7 @@ public class TaskAssignerImplTest extends EasyMockTest {
 
   @Test
   public void testAssignmentClearedOnError() throws Exception {
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(OFFER, OFFER_2));
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(OFFER, OFFER_2));
     offerManager.launchTask(MESOS_OFFER.getId(), TASK_INFO);
     expectLastCall().andThrow(new OfferManager.LaunchException("expected"));
     expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
@@ -264,7 +264,7 @@ public class TaskAssignerImplTest extends EasyMockTest {
   @Test
   public void testAssignmentSkippedForReservedSlave() throws Exception {
     expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(OFFER));
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(OFFER));
 
     control.replay();
 
@@ -286,7 +286,7 @@ public class TaskAssignerImplTest extends EasyMockTest {
     // Ensures slave/task reservation relationship is only enforced in slave->task direction
     // and permissive in task->slave direction. In other words, a task with a slave reservation
     // should still be tried against other unreserved slaves.
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(OFFER_2, OFFER));
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(OFFER_2, OFFER));
     expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
     expect(filter.filter(
         new UnusedResource(
@@ -329,8 +329,8 @@ public class TaskAssignerImplTest extends EasyMockTest {
             .build(),
         IHostAttributes.build(new HostAttributes()));
 
-    expect(offerManager.getOffers(GROUP_KEY)).andReturn(ImmutableSet.of(mismatched, OFFER));
-    expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER);
+    expect(offerManager.getOffers(GROUP_KEY, DEV_TIER)).andReturn(ImmutableSet.of(mismatched, OFFER));
+    expect(tierManager.getTier(TASK.getAssignedTask().getTask())).andReturn(DEV_TIER).times(1);
     expect(filter.filter(
         new UnusedResource(
             bagFromMesosResources(mismatched.getOffer().getResourcesList()),

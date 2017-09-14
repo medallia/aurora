@@ -14,9 +14,14 @@
 package org.apache.aurora.scheduler.state;
 
 import java.util.Iterator;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
@@ -159,7 +164,7 @@ public interface TaskAssigner {
       Iterator<String> remainingTasks = taskIds.iterator();
       String taskId = remainingTasks.next();
 
-      for (HostOffer offer : offerManager.getOffers(groupKey)) {
+      for (HostOffer offer : offerManager.getOffers(groupKey, tierInfo)) {
         evaluatedOffers.incrementAndGet();
 
         Optional<TaskGroupKey> reservedGroup = Optional.fromNullable(

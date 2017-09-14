@@ -16,6 +16,7 @@ package org.apache.aurora.benchmark.fakes;
 import com.google.common.base.Optional;
 
 import org.apache.aurora.scheduler.HostOffer;
+import org.apache.aurora.scheduler.TierInfo;
 import org.apache.aurora.scheduler.base.TaskGroupKey;
 import org.apache.aurora.scheduler.events.PubsubEvent;
 import org.apache.aurora.scheduler.offers.OfferManager;
@@ -44,6 +45,11 @@ public class FakeOfferManager implements OfferManager {
 
   @Override
   public Iterable<HostOffer> getOffers(TaskGroupKey groupKey) {
+    return null;
+  }
+
+  @Override
+  public Iterable<HostOffer> getOffers(TaskGroupKey groupKey, TierInfo tierInfo) {
     return null;
   }
 
