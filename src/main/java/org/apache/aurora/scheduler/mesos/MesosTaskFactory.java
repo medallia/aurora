@@ -24,7 +24,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
-
 import org.apache.aurora.Protobufs;
 import org.apache.aurora.codec.ThriftBinaryCodec;
 import org.apache.aurora.scheduler.TierManager;
@@ -207,18 +206,7 @@ public interface MesosTaskFactory {
 
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
-        IDockerContainer dockerContainer = config.getContainer().getDocker();
-        if (config.isSetExecutorConfig()) {
-          ExecutorInfo.Builder execBuilder = configureTaskForExecutor(task, acceptedOffer)
-              .setContainer(getDockerContainerInfo(
-                  dockerContainer,
-                  Optional.of(getExecutorName(task))));
-          taskBuilder.setExecutor(execBuilder.build());
-        } else {
-          LOG.warn("Running Docker-based task without an executor.");
-          taskBuilder.setContainer(getDockerContainerInfo(dockerContainer, Optional.absent()))
-              .setCommand(CommandInfo.newBuilder().setShell(false));
-        }
+        DockerContainerTasks.configureTask(task, config, taskBuilder, acceptedOffer, serverInfo);
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
@@ -289,8 +277,8 @@ public interface MesosTaskFactory {
         Optional<String> executorName) {
 
       Iterable<Protos.Parameter> parameters = Iterables.transform(config.getParameters(),
-          item -> Protos.Parameter.newBuilder().setKey(item.getName())
-            .setValue(item.getValue()).build());
+              item -> Protos.Parameter.newBuilder().setKey(item.getName())
+                      .setValue(item.getValue()).build());
 
       ContainerInfo.DockerInfo.Builder dockerBuilder = ContainerInfo.DockerInfo.newBuilder()
           .setImage(config.getImage()).addAllParameters(parameters);

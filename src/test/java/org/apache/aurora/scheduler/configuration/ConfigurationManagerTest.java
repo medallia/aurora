@@ -215,15 +215,16 @@ public class ConfigurationManagerTest {
   public void testPassthroughDockerParameters() throws TaskDescriptionException {
     TaskConfig taskConfig = CONFIG_WITH_CONTAINER.newBuilder();
     DockerParameter userParameter = new DockerParameter("bar", "baz");
+    DockerParameter defaultParameter = new DockerParameter("foo", "bar");
     taskConfig.getContainer().getDocker().getParameters().clear();
     taskConfig.getContainer().getDocker().addToParameters(userParameter);
 
     ITaskConfig result = DOCKER_CONFIGURATION_MANAGER.validateAndPopulate(
         ITaskConfig.build(taskConfig));
-
     // The resulting task config should contain parameters supplied from user config.
     List<IDockerParameter> params = result.getContainer().getDocker().getParameters();
-    assertThat(params, is(ImmutableList.of(IDockerParameter.build(userParameter))));
+    assertThat(params, is(ImmutableList.of(IDockerParameter.build(defaultParameter),
+            IDockerParameter.build(userParameter))));
   }
 
   @Test

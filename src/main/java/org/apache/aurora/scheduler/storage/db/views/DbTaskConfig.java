@@ -15,13 +15,16 @@ package org.apache.aurora.scheduler.storage.db.views;
 
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.aurora.common.collections.Pair;
 import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.ExecutorConfig;
 import org.apache.aurora.gen.Identity;
+import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.JobKey;
+import org.apache.aurora.gen.KillPolicy;
 import org.apache.aurora.gen.MesosContainer;
 import org.apache.aurora.gen.MesosFetcherURI;
 import org.apache.aurora.gen.Metadata;
@@ -47,7 +50,9 @@ public final class DbTaskConfig {
   private List<Pair<String, String>> taskLinks;
   private String contactEmail;
   private ExecutorConfig executorConfig;
+  private KillPolicy killPolicy;
   private List<Metadata> metadata;
+  private List<Instance> instances;
   private List<MesosFetcherURI> mesosFetcherUris;
   private DbContainer container;
   private List<Volume> volumes;
@@ -80,7 +85,9 @@ public final class DbTaskConfig {
         .setTaskLinks(Pairs.toMap(taskLinks))
         .setContactEmail(contactEmail)
         .setExecutorConfig(executorConfig)
+        .setKillPolicy(killPolicy)
         .setMetadata(ImmutableSet.copyOf(metadata))
+        .setInstances(ImmutableList.copyOf(instances))
         .setMesosFetcherUris(ImmutableSet.copyOf(mesosFetcherUris))
         .setContainer(
             container == null ? Container.mesos(new MesosContainer()) : container.toThrift())

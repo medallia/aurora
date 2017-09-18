@@ -215,6 +215,17 @@ struct DockerParameter {
   2: string value
 }
 
+/** Describes a variable to be interpolated in the configuration of a task instance. */ 
+struct Variable {
+	1: string name
+	2: string value
+}
+
+/** Describes a task instance that contains variables to be interpolated in the parameterized configuration. */
+struct Instance {
+	1: list<Variable> variables
+}
+
 /** Describes a docker container */
 struct DockerContainer {
   /** The container image to be run */
@@ -238,6 +249,12 @@ union Resource {
   5: i64 numGpus
 }
 
+/** Describes a Mesos Kill Policy */
+struct KillPolicy {
+  /** The time to wait for a task to gracefully terminate before killing it */
+  1: i64 gracePeriodSecs
+}
+
 /** Description of the tasks contained within a job. */
 struct TaskConfig {
  /** Job task belongs to. */
@@ -259,6 +276,9 @@ struct TaskConfig {
  18: optional bool production
  /** Task tier type. */
  30: optional string tier
+ /** A Mesos Kill Policy for the task*/
+ 15: optional KillPolicy killPolicy
+
  /** All resources required to run a task. */
  32: set<Resource> resources
 
@@ -278,7 +298,9 @@ struct TaskConfig {
  25: optional ExecutorConfig executorConfig
  /** Used to display additional details in the UI. */
  27: optional set<Metadata> metadata
-
+ /** Instances with variables to Interpolate in the TaskConfig */
+ 31: optional list<Instance> instances
+ 
  // This field is deliberately placed at the end to work around a bug in the immutable wrapper
  // code generator.  See AURORA-1185 for details.
  /** the container the task should use to execute */

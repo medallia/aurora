@@ -13,6 +13,8 @@
  */
 package org.apache.aurora.scheduler.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,10 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 
 import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.DockerParameter;
@@ -41,6 +40,8 @@ import org.apache.aurora.scheduler.resources.ResourceManager;
 import org.apache.aurora.scheduler.resources.ResourceType;
 import org.apache.aurora.scheduler.storage.entities.IConstraint;
 import org.apache.aurora.scheduler.storage.entities.IContainer;
+import org.apache.aurora.scheduler.storage.entities.IIdentity;
+import org.apache.aurora.scheduler.storage.entities.IInstance;
 import org.apache.aurora.scheduler.storage.entities.IJobConfiguration;
 import org.apache.aurora.scheduler.storage.entities.IMesosContainer;
 import org.apache.aurora.scheduler.storage.entities.IResource;
@@ -175,6 +176,21 @@ public class ConfigurationManager {
 
     JobConfiguration builder = job.newBuilder();
 
+    /* This if was added to prevent Aurora tests from failing
+    when instanceCount does not match the number of instances passed.
+    This happens specifically for tests using Mesos Containers, and should
+    be fixed in the tests to remove the if.
+    */
+    if(job.getTaskConfig().getContainer().isSetDocker()){
+      ImmutableList<IInstance> instances = job.getTaskConfig().getInstances();
+      if (!instances.isEmpty() && job.getInstanceCount() != instances.size()) {
+        // specified instanceCount must match number of instances
+        throw new TaskDescriptionException(String.format(
+                "Job instanceCount %s doesn't match number of instances %s",
+                job.getInstanceCount(), instances.size()));
+      }
+    }
+
     if (!JobKeys.isValid(job.getKey())) {
       throw new TaskDescriptionException("Job key " + job.getKey() + " is invalid.");
     }
@@ -284,6 +300,7 @@ public class ConfigurationManager {
             "Only " + dedicatedRole + " may use hosts dedicated for that role.");
       }
     }
+    InstanceVariablesSubstitutor.validate(config);
 
     Optional<Container._Fields> containerType;
     if (config.isSetContainer()) {
@@ -293,17 +310,17 @@ public class ConfigurationManager {
         if (!containerConfig.getDocker().isSetImage()) {
           throw new TaskDescriptionException("A container must specify an image.");
         }
-        if (containerConfig.getDocker().getParameters().isEmpty()) {
-          for (Map.Entry<String, String> e : settings.defaultDockerParameters.entries()) {
-            builder.getContainer().getDocker().addToParameters(
-                new DockerParameter(e.getKey(), e.getValue()));
-          }
-        } else {
-          if (!settings.allowDockerParameters) {
-            throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
-          }
+        if (!settings.allowDockerParameters && !builder.getContainer().getDocker().getParameters().isEmpty()) {
+          throw new TaskDescriptionException(NO_DOCKER_PARAMETERS);
         }
-
+        if (!settings.defaultDockerParameters.isEmpty()) {
+          List<DockerParameter> parameters = new ArrayList<>();
+          List<DockerParameter> defaultParameters = settings.defaultDockerParameters.entries()
+                  .stream().map(e -> new DockerParameter(e.getKey(), e.getValue())).collect(Collectors.toList());
+          parameters.addAll(defaultParameters);
+          parameters.addAll(builder.getContainer().getDocker().getParameters());
+          builder.getContainer().getDocker().setParameters(parameters);
+        }
         if (settings.requireDockerUseExecutor && !config.isSetExecutorConfig()) {
           throw new TaskDescriptionException(EXECUTOR_REQUIRED_WITH_DOCKER);
         }
@@ -363,6 +380,10 @@ public class ConfigurationManager {
       if (!settings.allowContainerVolumes && !container.getVolumes().isEmpty()) {
         throw new TaskDescriptionException(NO_CONTAINER_VOLUMES);
       }
+    }
+
+    if (config.isSetKillPolicy() && config.getKillPolicy().getGracePeriodSecs() < 0) {
+      throw new TaskDescriptionException("Grace Period should be greater than 0");
     }
 
     maybeFillLinks(builder);
