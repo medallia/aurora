@@ -13,7 +13,9 @@
  */
 package org.apache.aurora.scheduler.state;
 
+import java.util.Comparator;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -22,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -130,10 +133,10 @@ public interface MaintenanceController {
 
     private Set<String> drainTasksOnHost(String host, MutableStoreProvider store) {
       Query.Builder query = Query.slaveScoped(host).active();
-      Set<String> activeTasks = FluentIterable.from(store.getTaskStore().fetchTasks(query))
-          .transform(Tasks::id)
-          .toSet();
-
+      ImmutableList<IScheduledTask> activeScheduledTasks = FluentIterable.from(store.getTaskStore().fetchTasks(query))
+              .toSortedList(Comparator.comparingInt(o -> o.getAssignedTask().getTask().getPriority()));
+      Set<String> activeTasks = activeScheduledTasks.stream().map(Tasks::id).collect(Collectors.toSet());
+      
       if (activeTasks.isEmpty()) {
         LOG.info("No tasks to drain on host: {}", host);
         // Simple way to avoid the log message if there are no tasks.

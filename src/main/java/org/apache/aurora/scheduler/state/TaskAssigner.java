@@ -89,15 +89,15 @@ public interface TaskAssigner {
     @VisibleForTesting
     static final String ASSIGNER_EVALUATED_OFFERS = "assigner_evaluated_offers";
 
-    private final AtomicLong launchFailures;
-    private final AtomicLong evaluatedOffers;
+    final AtomicLong launchFailures;
+    final AtomicLong evaluatedOffers;
 
-    private final StateManager stateManager;
-    private final SchedulingFilter filter;
-    private final MesosTaskFactory taskFactory;
-    private final OfferManager offerManager;
-    private final TierManager tierManager;
-    private final UpdateAgentReserver updateAgentReserver;
+    final StateManager stateManager;
+    final SchedulingFilter filter;
+    final MesosTaskFactory taskFactory;
+    final OfferManager offerManager;
+    final TierManager tierManager;
+    final UpdateAgentReserver updateAgentReserver;
 
     @Inject
     public FirstFitTaskAssigner(
@@ -130,7 +130,7 @@ public interface TaskAssigner {
       return assigned;
     }
 
-    private TaskInfo assign(
+    TaskInfo assign(
         MutableStoreProvider storeProvider,
         Offer offer,
         String taskId) {
@@ -148,7 +148,7 @@ public interface TaskAssigner {
       return taskFactory.createFrom(assigned, offer);
     }
 
-    private boolean evaluateOffer(
+    protected boolean evaluateOffer(
         MutableStoreProvider storeProvider,
         TierInfo tierInfo,
         ResourceRequest resourceRequest,

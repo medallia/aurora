@@ -61,6 +61,8 @@ import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.IScheduledTask;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -105,6 +107,8 @@ public class PendingTaskProcessor implements Runnable {
   @Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
   @interface ReservationBatchSize { }
 
+  static final Logger LOG = LoggerFactory.getLogger(PendingTaskProcessor.class);
+  
   @Inject
   PendingTaskProcessor(
       Storage storage,
@@ -204,10 +208,12 @@ public class PendingTaskProcessor implements Runnable {
   }
 
   private List<TaskGroupKey> fetchIdlePendingGroups(StoreProvider store) {
+    LOG.debug("fetchIdlePendingGroups: ");
     Multiset<TaskGroupKey> taskGroupCounts = HashMultiset.create(
         FluentIterable.from(store.getTaskStore().fetchTasks(Query.statusScoped(PENDING)))
             .filter(Predicates.and(isIdleTask, Predicates.not(hasCachedSlot)))
-            .transform(Functions.compose(ASSIGNED_TO_GROUP_KEY, IScheduledTask::getAssignedTask)));
+            .transform(Functions.compose(ASSIGNED_TO_GROUP_KEY, IScheduledTask::getAssignedTask))
+            .toSortedList((o1, o2) -> Integer.compare(o1.getTask().getPriority(), o2.getTask().getPriority())));
 
     return getPreemptionSequence(taskGroupCounts, reservationBatchSize);
   }
@@ -231,6 +237,7 @@ public class PendingTaskProcessor implements Runnable {
     Multiset<TaskGroupKey> mutableGroups = HashMultiset.create(groups);
     List<TaskGroupKey> instructions = Lists.newLinkedList();
     Set<TaskGroupKey> keys = ImmutableSet.copyOf(groups.elementSet());
+    
     while (!mutableGroups.isEmpty()) {
       for (TaskGroupKey key : keys) {
         if (mutableGroups.contains(key)) {

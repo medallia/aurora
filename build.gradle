@@ -273,6 +273,8 @@ project(':api') {
       ].each {
         excludeDirs << file("$buildDir/$it")
       }
+      outputDir file("$buildDir/classes/main")
+      testOutputDir file("$buildDir/classes/test")
     }
   }
 }

@@ -16,6 +16,7 @@ package org.apache.aurora.scheduler.filter;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 
@@ -23,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
 import org.apache.aurora.common.inject.TimedInterceptor.Timed;
@@ -109,7 +111,9 @@ public class SchedulingFilterImpl implements SchedulingFilter {
       AttributeAggregate jobState,
       Iterable<IAttribute> offerAttributes) {
 
-    for (IConstraint constraint : VALUES_FIRST.sortedCopy(taskConstraints)) {
+    List<IConstraint> constraints = Lists.newArrayList(taskConstraints); 
+    // constraints.add()
+    for (IConstraint constraint : VALUES_FIRST.sortedCopy(constraints)) {
       Optional<Veto> veto = ConstraintMatcher.getVeto(jobState, offerAttributes, constraint);
       if (veto.isPresent()) {
         // Break early to avoid potentially-expensive operations to satisfy other constraints.

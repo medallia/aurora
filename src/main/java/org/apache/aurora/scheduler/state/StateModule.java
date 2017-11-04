@@ -41,7 +41,7 @@ public class StateModule extends AbstractModule {
   @CmdLine(name = "task_assigner_modules",
       help = "Guice modules for customizing task assignment.")
   private static final Arg<Set<Module>> TASK_ASSIGNER_MODULES = Arg.create(
-      ImmutableSet.of(MoreModules.lazilyInstantiated(FirstFitTaskAssignerModule.class)));
+      ImmutableSet.of(MoreModules.lazilyInstantiated(MauricioTaskAssignerModule.class)));
 
   private final Set<Module> assignerModules;
 
