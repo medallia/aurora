@@ -208,12 +208,18 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
           // Suppress "Unregistered executor" message as it bears no meaning to the user.
           message = Optional.absent();
           break;
-
+          
+        case REASON_TASK_CHECK_STATUS_UPDATED:
+          message = Optional.of("Task Health Check Status changed: " + status.toString());
+          break;
+          
         default:
           // Message is already populated above.
           break;
       }
     }
+    
+    // TODO set message if killed by healthcheck 
 
     return message;
   }

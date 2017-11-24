@@ -2,6 +2,7 @@ package org.apache.aurora.scheduler.mesos;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import org.apache.aurora.gen.ExecutorConfig;
 import org.apache.aurora.scheduler.configuration.InstanceVariablesSubstitutor;
 import org.apache.aurora.scheduler.resources.AcceptedOffer;
 import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
@@ -12,6 +13,7 @@ import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
 import org.apache.mesos.v1.Protos.DurationInfo;
+import org.apache.mesos.v1.Protos.HealthCheck;
 import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.TaskInfo.Builder;
 import org.slf4j.Logger;
@@ -34,6 +36,14 @@ public class DockerContainerTasks {
 		// build variable substitutor.
 		InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(task.getTask(),
 				task.getInstanceId());
+
+		 
+				
+		taskBuilder.setHealthCheck(HealthCheck.newBuilder()
+				.setCommand(CommandInfo.newBuilder().setValue("curl www.google.com").build())
+				.setConsecutiveFailures(3)
+				.setDelaySeconds(5)
+				.build());
 
 		IDockerContainer config = taskConfig.getContainer().getDocker();
 		Iterable<Protos.Parameter> parameters = instanceVariablesSubstitutor.getDockerParameters();

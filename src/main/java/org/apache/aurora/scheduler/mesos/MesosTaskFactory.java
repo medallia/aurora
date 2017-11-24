@@ -44,13 +44,18 @@ import org.apache.aurora.scheduler.storage.entities.IMesosContainer;
 import org.apache.aurora.scheduler.storage.entities.IServerInfo;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.CheckInfo;
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
+import org.apache.mesos.v1.Protos.ContainerInfo.Builder;
 import org.apache.mesos.v1.Protos.DiscoveryInfo;
 import org.apache.mesos.v1.Protos.ExecutorID;
 import org.apache.mesos.v1.Protos.ExecutorInfo;
+import org.apache.mesos.v1.Protos.HealthCheck;
 import org.apache.mesos.v1.Protos.Label;
 import org.apache.mesos.v1.Protos.Labels;
+import org.apache.mesos.v1.Protos.NetworkInfo;
+import org.apache.mesos.v1.Protos.NetworkInfo.IPAddress;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.Port;
 import org.apache.mesos.v1.Protos.Resource;
@@ -247,6 +252,8 @@ public interface MesosTaskFactory {
 
         ContainerInfo.MesosInfo.Builder mesosContainerBuilder =
             ContainerInfo.MesosInfo.newBuilder();
+        
+        
 
         Iterable<Protos.Volume> containerVolumes = Iterables.transform(mesosContainer.getVolumes(),
             input -> Protos.Volume.newBuilder()

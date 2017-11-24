@@ -33,6 +33,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     dev.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", "3072"]
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
     dev.vm.provision "shell", path: "examples/vagrant/provision-dev-cluster.sh"
   end

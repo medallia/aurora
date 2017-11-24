@@ -258,7 +258,7 @@ public interface MesosCallbackHandler {
       // Periodic task reconciliation runs generate a large amount of no-op messages.
       // Suppress logging for reconciliation status updates by default.
       boolean debugLevel = status.hasReason() && status.getReason() == REASON_RECONCILIATION;
-
+      
       StringBuilder message = new StringBuilder("Received status update for task ")
           .append(status.getTaskId().getValue())
           .append(" in state ")
@@ -272,6 +272,7 @@ public interface MesosCallbackHandler {
       if (status.hasMessage()) {
         message.append(": ").append(status.getMessage());
       }
+      logger.info("RAW Task Status Update: " + status.getTaskId().getValue() + ". -> " + status.toString());
       if (debugLevel) {
         logger.debug(message.toString());
       } else {
