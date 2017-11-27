@@ -26,10 +26,12 @@ import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
 import org.apache.aurora.Protobufs;
 import org.apache.aurora.codec.ThriftBinaryCodec;
+import org.apache.aurora.gen.MesosContainer;
 import org.apache.aurora.scheduler.TierManager;
 import org.apache.aurora.scheduler.base.JobKeys;
 import org.apache.aurora.scheduler.base.SchedulerException;
 import org.apache.aurora.scheduler.base.Tasks;
+import org.apache.aurora.scheduler.configuration.InstanceVariablesSubstitutor;
 import org.apache.aurora.scheduler.configuration.executor.ExecutorSettings;
 import org.apache.aurora.scheduler.resources.AcceptedOffer;
 import org.apache.aurora.scheduler.resources.ResourceBag;
@@ -194,7 +196,15 @@ public interface MesosTaskFactory {
         configureDiscoveryInfos(task, taskBuilder);
       }
 
+      LOG.info("Executor name is: {}", getExecutorName(task));
+
       if (config.getContainer().isSetMesos()) {
+        LOG.info("About to launch a Mesos container!");
+
+        LOG.info("Image is: {}", config.getContainer().getMesos().getImage());
+
+
+        /*
         ExecutorInfo.Builder executorInfoBuilder = configureTaskForExecutor(task, acceptedOffer);
 
         Optional<ContainerInfo.Builder> containerInfoBuilder = configureTaskForImage(
@@ -202,17 +212,36 @@ public interface MesosTaskFactory {
             getExecutorName(task));
         if (containerInfoBuilder.isPresent()) {
           executorInfoBuilder.setContainer(containerInfoBuilder.get());
+          taskBuilder.setContainer(containerInfoBuilder.get());
         }
 
+        Protos.NetworkInfo.Builder networkInfoBuilder = Protos.NetworkInfo.newBuilder()
+                .setName("test")
+                .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("10.15.20.5").build())
+                .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("110.110.0.1").build())
+                .addPortMappings(Protos.NetworkInfo.PortMapping.newBuilder().setHostPort(8000).setContainerPort(5000).build())
+                .addGroups("A group")
+                .addGroups("Other group")
+                .setLabels(Labels.newBuilder()
+                        .addLabels(Label.newBuilder().setKey("key").setValue("value").build())
+                        .addLabels(Label.newBuilder().setKey("clave").setValue("valor")).build());
+
+        executorInfoBuilder.getContainerBuilder().addNetworkInfos(networkInfoBuilder.build());
         taskBuilder.setExecutor(executorInfoBuilder.build());
+        */
+        MesosContainerTask.configureTask(task, config, taskBuilder);
       } else if (config.getContainer().isSetDocker()) {
+        LOG.info("(Docker) Image is: {}", config.getContainer().getDocker().getImage());
         DockerContainerTasks.configureTask(task, config, taskBuilder, acceptedOffer, serverInfo);
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }
 
       if (taskBuilder.hasExecutor()) {
+        LOG.info("taskBuilder executor is: {}", taskBuilder.getExecutor().getName());
         taskBuilder.setData(ByteString.copyFrom(serializeTask(task)));
+      } else {
+        LOG.info("taskBuilder with no executor?!?!");
       }
 
       return taskBuilder.build();
