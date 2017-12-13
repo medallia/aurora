@@ -203,32 +203,6 @@ public interface MesosTaskFactory {
 
         LOG.info("Image is: {}", config.getContainer().getMesos().getImage());
 
-
-        /*
-        ExecutorInfo.Builder executorInfoBuilder = configureTaskForExecutor(task, acceptedOffer);
-
-        Optional<ContainerInfo.Builder> containerInfoBuilder = configureTaskForImage(
-            task.getTask().getContainer().getMesos(),
-            getExecutorName(task));
-        if (containerInfoBuilder.isPresent()) {
-          executorInfoBuilder.setContainer(containerInfoBuilder.get());
-          taskBuilder.setContainer(containerInfoBuilder.get());
-        }
-
-        Protos.NetworkInfo.Builder networkInfoBuilder = Protos.NetworkInfo.newBuilder()
-                .setName("test")
-                .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("10.15.20.5").build())
-                .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("110.110.0.1").build())
-                .addPortMappings(Protos.NetworkInfo.PortMapping.newBuilder().setHostPort(8000).setContainerPort(5000).build())
-                .addGroups("A group")
-                .addGroups("Other group")
-                .setLabels(Labels.newBuilder()
-                        .addLabels(Label.newBuilder().setKey("key").setValue("value").build())
-                        .addLabels(Label.newBuilder().setKey("clave").setValue("valor")).build());
-
-        executorInfoBuilder.getContainerBuilder().addNetworkInfos(networkInfoBuilder.build());
-        taskBuilder.setExecutor(executorInfoBuilder.build());
-        */
         MesosContainerTask.configureTask(task, config, taskBuilder);
       } else if (config.getContainer().isSetDocker()) {
         LOG.info("(Docker) Image is: {}", config.getContainer().getDocker().getImage());

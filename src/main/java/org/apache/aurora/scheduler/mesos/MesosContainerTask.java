@@ -1,6 +1,8 @@
 package org.apache.aurora.scheduler.mesos;
 
 
+import com.google.common.collect.ImmutableList;
+import org.apache.aurora.gen.Label;
 import org.apache.aurora.scheduler.configuration.InstanceVariablesSubstitutor;
 import org.apache.aurora.scheduler.storage.entities.*;
 import org.apache.mesos.v1.Protos;
@@ -19,6 +21,12 @@ public class MesosContainerTask {
             task.getInstanceId());
 
     IMesosContainer mesosContainer = taskConfig.getContainer().getMesos();
+    ImmutableList<ILabel> labels = mesosContainer.getLabels();
+    
+    if (labels.isEmpty()) {
+      LOG.info("Labels map is empty :(");
+    }
+    labels.forEach((label) -> LOG.info("Found a mesos label!!!"));
 
     Protos.Image.Builder imageBuilder = Protos.Image.newBuilder();
     IDockerImage dockerImage = mesosContainer.getImage().getDocker();
@@ -33,7 +41,6 @@ public class MesosContainerTask {
     Protos.NetworkInfo.Builder networkInfoBuilder = Protos.NetworkInfo.newBuilder()
             .setName("test")
             .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("10.15.20.5").build())
-            .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("110.110.0.1").build())
             .addPortMappings(Protos.NetworkInfo.PortMapping.newBuilder().setHostPort(8000).setContainerPort(5000).build())
             .addGroups("A group")
             .addGroups("Other group")

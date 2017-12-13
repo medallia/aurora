@@ -168,6 +168,10 @@ class TaskConfigManager {
       if (!container.getVolumes().isEmpty()) {
         configMapper.insertVolumes(configInsert.getId(), container.getVolumes());
       }
+
+      if (!container.getLabels().isEmpty()) {
+        configMapper.insertLabels(configInsert.getId(), container.getLabels());
+      }
     }
 
     return configInsert.getId();

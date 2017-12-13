@@ -25,6 +25,7 @@ import org.apache.aurora.gen.Identity;
 import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.JobKey;
 import org.apache.aurora.gen.KillPolicy;
+import org.apache.aurora.gen.Label;
 import org.apache.aurora.gen.MesosContainer;
 import org.apache.aurora.gen.MesosFetcherURI;
 import org.apache.aurora.gen.Metadata;
@@ -56,6 +57,7 @@ public final class DbTaskConfig {
   private List<MesosFetcherURI> mesosFetcherUris;
   private DbContainer container;
   private List<Volume> volumes;
+  private List<Label> labels;
   private String tier;
   private List<DBResource> resources;
 
@@ -97,6 +99,7 @@ public final class DbTaskConfig {
     // modelled as tables.
     if (builder.getContainer().isSetMesos()) {
       builder.getContainer().getMesos().setVolumes(volumes);
+      builder.getContainer().getMesos().setLabels(labels);
     }
 
     return builder;

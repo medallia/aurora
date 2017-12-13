@@ -170,6 +170,10 @@
     <result property="mode" column="mode" typeHandler="org.apache.aurora.scheduler.storage.db.typehandlers.VolumeModeTypeHandler" />
   </resultMap>
 
+  <resultMap id="labelMap" type="org.apache.aurora.gen.Label">
+    <id column="id" />
+  </resultMap>
+
   <resultMap id="resourceMap" type="org.apache.aurora.scheduler.storage.db.views.DBResource">
     <id column="id" />
     <result property="type"
@@ -189,6 +193,7 @@
         columnPrefix="j_"/>
     <association property="container" resultMap="containerMap" columnPrefix="c_"/>
     <collection property="volumes" columnPrefix="volume_" resultMap="volumeMap" notNullColumn="id" />
+    <collection property="labels" columnPrefix="label_" resultMap="labelMap" notNullColumn="id" />
     <collection
         property="constraints"
         columnPrefix="constraint_"
@@ -253,6 +258,9 @@
       v.host_path as volume_host_path,
       v.container_path as volume_container_path,
       v.mode as volume_mode,
+      l.id AS label_id,
+      l.label_key AS label_key,
+      l.label_value AS label_value,
       tc.id AS constraint_id,
       tc.name AS constraint_name,
       tlc.id AS constraint_l_id,
@@ -270,6 +278,7 @@
     LEFT OUTER JOIN task_config_docker_images AS di ON di.task_config_id = c.id
     LEFT OUTER JOIN task_config_appc_images AS ai ON ai.task_config_id = c.id
     LEFT OUTER JOIN task_config_volumes AS v ON v.task_config_id = c.id
+    LEFT OUTER JOIN task_config_labels AS l ON l.task_config_id = c.id
     LEFT OUTER JOIN task_constraints AS tc ON tc.task_config_id = c.id
     LEFT OUTER JOIN limit_constraints as tlc ON tlc.constraint_id = tc.id
     LEFT OUTER JOIN value_constraints as tvc ON tvc.constraint_id = tc.id
@@ -486,6 +495,20 @@
       #{volume.hostPath},
       #{volume.containerPath},
       #{volume.mode, typeHandler=org.apache.aurora.scheduler.storage.db.typehandlers.VolumeModeTypeHandler}
+    </foreach>
+    )
+  </insert>
+
+  <insert id="insertLabels">
+    INSERT INTO task_config_labels (
+      task_config_id,
+      label_key,
+      label_value
+    ) VALUES (
+    <foreach item="label" collection="labels" separator="),(">
+      #{configId},
+      #{label.key},
+      #{label.value}
     </foreach>
     )
   </insert>

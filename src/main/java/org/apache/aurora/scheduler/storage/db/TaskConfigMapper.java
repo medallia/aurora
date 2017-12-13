@@ -20,17 +20,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import org.apache.aurora.common.collections.Pair;
 import org.apache.aurora.scheduler.storage.db.views.DbTaskConfig;
-import org.apache.aurora.scheduler.storage.entities.IConstraint;
-import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
-import org.apache.aurora.scheduler.storage.entities.IDockerParameter;
-import org.apache.aurora.scheduler.storage.entities.IVariable;
-import org.apache.aurora.scheduler.storage.entities.IJobKey;
-import org.apache.aurora.scheduler.storage.entities.ILimitConstraint;
-import org.apache.aurora.scheduler.storage.entities.IMesosFetcherURI;
-import org.apache.aurora.scheduler.storage.entities.IMetadata;
-import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
-import org.apache.aurora.scheduler.storage.entities.IValueConstraint;
-import org.apache.aurora.scheduler.storage.entities.IVolume;
+import org.apache.aurora.scheduler.storage.entities.*;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -217,4 +207,14 @@ interface TaskConfigMapper extends GarbageCollectedTableMapper {
   void insertVolumes(
       @Param("configId") long configId,
       @Param("volumes") List<IVolume> volumes);
+
+  /**
+   * Inserts a task's labels.
+   *
+   * @param configId Task config ID.
+   * @param labels Labels to insert.
+   */
+  void insertLabels(
+          @Param("configId") long configId,
+          @Param("labels") List<ILabel> labels);
 }

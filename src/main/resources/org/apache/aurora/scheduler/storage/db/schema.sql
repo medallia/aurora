@@ -250,6 +250,13 @@ CREATE TABLE task_config_volumes(
   mode INT NOT NULL REFERENCES volume_modes(id),
 );
 
+CREATE TABLE task_config_labels(
+  id IDENTITY,
+  task_config_id BIGINT NOT NULL REFERENCES task_configs(id) ON DELETE CASCADE,
+  label_key VARCHAR NOT NULL,
+  label_value VARCHAR NOT NULL,
+);
+
 CREATE TABLE task_states(
   id INT PRIMARY KEY,
   name VARCHAR NOT NULL,
