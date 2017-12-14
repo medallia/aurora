@@ -23,10 +23,6 @@ public class MesosContainerTask {
     IMesosContainer mesosContainer = taskConfig.getContainer().getMesos();
     ImmutableList<ILabel> labels = mesosContainer.getLabels();
     
-    if (labels.isEmpty()) {
-      LOG.info("Labels map is empty :(");
-    }
-    labels.forEach((label) -> LOG.info("Found a mesos label!!!"));
 
     Protos.Image.Builder imageBuilder = Protos.Image.newBuilder();
     IDockerImage dockerImage = mesosContainer.getImage().getDocker();
@@ -35,18 +31,26 @@ public class MesosContainerTask {
     imageBuilder.setDocker(Protos.Image.Docker.newBuilder()
             .setName(dockerImage.getName() + ":" + dockerImage.getTag()));
 
-
     Protos.ContainerInfo.MesosInfo.Builder mesosContainerBuilder = Protos.ContainerInfo.MesosInfo.newBuilder();
 
     Protos.NetworkInfo.Builder networkInfoBuilder = Protos.NetworkInfo.newBuilder()
             .setName("test")
-            .addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress("10.15.20.5").build())
             .addPortMappings(Protos.NetworkInfo.PortMapping.newBuilder().setHostPort(8000).setContainerPort(5000).build())
-            .addGroups("A group")
-            .addGroups("Other group")
-            .setLabels(Protos.Labels.newBuilder()
-                    .addLabels(Protos.Label.newBuilder().setKey("key").setValue("value").build())
-                    .addLabels(Protos.Label.newBuilder().setKey("clave").setValue("valor")).build());
+            .addGroups("A group");
+
+    if (!labels.isEmpty()) {
+      Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
+      for (ILabel label : labels) {
+        LOG.info("Found mesos label: " + label.toString());
+        labelsBuilder.addLabels(Protos.Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
+        if (label.getKey().equals("ip")) {
+          networkInfoBuilder.addIpAddresses(Protos.NetworkInfo.IPAddress.newBuilder().setIpAddress(label.getValue()).build());
+        }
+      }
+      networkInfoBuilder.setLabels(labelsBuilder.build());
+    } else {
+      LOG.info("There are no labels for this container.");
+    }
 
     Protos.ContainerInfo.Builder containerInfo = Protos.ContainerInfo.newBuilder()
             .setType(Protos.ContainerInfo.Type.MESOS)
