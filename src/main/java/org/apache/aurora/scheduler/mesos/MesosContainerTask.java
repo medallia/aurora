@@ -21,8 +21,7 @@ public class MesosContainerTask {
             task.getInstanceId());
 
     IMesosContainer mesosContainer = taskConfig.getContainer().getMesos();
-    ImmutableList<ILabel> labels = mesosContainer.getLabels();
-    
+    Iterable<Protos.Label> labels = instanceVariablesSubstitutor.getMesosLabels();
 
     Protos.Image.Builder imageBuilder = Protos.Image.newBuilder();
     IDockerImage dockerImage = mesosContainer.getImage().getDocker();
@@ -38,9 +37,9 @@ public class MesosContainerTask {
             .addPortMappings(Protos.NetworkInfo.PortMapping.newBuilder().setHostPort(8000).setContainerPort(5000).build())
             .addGroups("A group");
 
-    if (!labels.isEmpty()) {
+    if (!mesosContainer.getLabels().isEmpty()) {
       Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
-      for (ILabel label : labels) {
+      for (Protos.Label label : labels) {
         LOG.info("Found mesos label: " + label.toString());
         labelsBuilder.addLabels(Protos.Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
         if (label.getKey().equals("ip")) {
@@ -59,7 +58,6 @@ public class MesosContainerTask {
 
     taskBuilder.setContainer(containerInfo.build());
 
-
     Protos.CommandInfo.Builder cmd = Protos.CommandInfo.newBuilder();
     String command = instanceVariablesSubstitutor.getCmdLine();
     LOG.info("(Mesos) Using CMD: {}", command);
@@ -72,6 +70,5 @@ public class MesosContainerTask {
       LOG.info("taskBuilder with no executor?!?!");
     }
   }
-
 
 }

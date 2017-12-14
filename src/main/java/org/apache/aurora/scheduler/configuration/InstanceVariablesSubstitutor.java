@@ -1,11 +1,10 @@
 package org.apache.aurora.scheduler.configuration;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
-import org.apache.aurora.scheduler.storage.entities.IInstance;
-import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
-import org.apache.aurora.scheduler.storage.entities.IVariable;
+import org.apache.aurora.gen.Label;
+import org.apache.aurora.scheduler.storage.entities.*;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.mesos.v1.Protos;
@@ -118,6 +117,13 @@ public class InstanceVariablesSubstitutor {
     return config.getParameters().stream().map(
       item -> Protos.Parameter.newBuilder().setKey(item.getName()).setValue(replaceRawString
               (item.getValue())).build()).collect(Collectors.toList());
+  }
+
+  public Iterable<Protos.Label> getMesosLabels() {
+    IMesosContainer config = this.task.getContainer().getMesos();
+    return config.getLabels().stream().map(
+            item -> Protos.Label.newBuilder().setKey(item.getKey()).setValue(replaceRawString
+                    (item.getValue())).build()).collect(Collectors.toList());
   }
 
   /** @return The interpolated cmdLine used in the first process the {@link ITaskConfig} or null if it can't be extracted. */
