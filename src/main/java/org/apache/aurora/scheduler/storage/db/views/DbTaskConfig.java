@@ -100,7 +100,6 @@ public final class DbTaskConfig {
     // modelled as tables.
     if (builder.getContainer().isSetMesos()) {
       builder.getContainer().getMesos().setVolumes(volumes);
-      builder.getContainer().getMesos().setLabels(labels);
     }
 
     return builder;

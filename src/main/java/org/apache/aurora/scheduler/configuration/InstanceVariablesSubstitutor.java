@@ -119,9 +119,8 @@ public class InstanceVariablesSubstitutor {
               (item.getValue())).build()).collect(Collectors.toList());
   }
 
-  public Iterable<Protos.Label> getMesosLabels() {
-    IMesosContainer config = this.task.getContainer().getMesos();
-    return config.getLabels().stream().map(
+  public Iterable<Protos.Label> getTaskLabels() {
+    return this.task.getLabels().stream().map(
             item -> Protos.Label.newBuilder().setKey(item.getKey()).setValue(replaceRawString
                     (item.getValue())).build()).collect(Collectors.toList());
   }

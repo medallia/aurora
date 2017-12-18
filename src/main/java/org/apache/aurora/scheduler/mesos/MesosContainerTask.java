@@ -21,7 +21,7 @@ public class MesosContainerTask {
             task.getInstanceId());
 
     IMesosContainer mesosContainer = taskConfig.getContainer().getMesos();
-    Iterable<Protos.Label> labels = instanceVariablesSubstitutor.getMesosLabels();
+    Iterable<Protos.Label> labels = instanceVariablesSubstitutor.getTaskLabels();
 
     Protos.Image.Builder imageBuilder = Protos.Image.newBuilder();
     IDockerImage dockerImage = mesosContainer.getImage().getDocker();
@@ -37,7 +37,7 @@ public class MesosContainerTask {
             .addPortMappings(Protos.NetworkInfo.PortMapping.newBuilder().setHostPort(8000).setContainerPort(5000).build())
             .addGroups("A group");
 
-    if (!mesosContainer.getLabels().isEmpty()) {
+    if (!taskConfig.getLabels().isEmpty()) {
       Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
       for (Protos.Label label : labels) {
         LOG.info("Found mesos label: " + label.toString());
