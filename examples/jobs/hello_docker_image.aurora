@@ -35,6 +35,7 @@ jobs = [
     name = 'hello_docker_image',
     task = task,
     instances = 3,
+    labels=[Label(key='plugin', value='routed'), Label(key="ip", value="#{ip}")],
     instance_variables = [
 	    Instance(variables=[
 		    Variable(name="ip", value="10.15.20.2")]),
@@ -43,7 +44,7 @@ jobs = [
 	    Instance(variables=[
 		    Variable(name="ip", value="10.15.20.4")])
 	    ],
-    container = Mesos(image=DockerImage(name='debian', tag='jessie'), labels=[Label(key='plugin', value='routed'), Label(key="ip", value="#{ip}")])
+    container = Mesos(image=DockerImage(name='debian', tag='jessie'))
   )
 ]
 

@@ -120,6 +120,10 @@ class TaskConfigManager {
       configMapper.insertMetadata(configInsert.getId(), config.getMetadata());
     }
 
+    if (!config.getLabels().isEmpty()) {
+      configMapper.insertLabels(configInsert.getId(), config.getLabels());
+    }
+
     if (!config.getInstances().isEmpty()) {
         for (IInstance instance : config.getInstances()) {
           InsertResult instanceInsert = new InsertResult();

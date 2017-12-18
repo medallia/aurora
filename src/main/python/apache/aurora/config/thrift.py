@@ -319,6 +319,8 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
   task.constraints = constraints_to_thrift(not_empty_or(job.constraints(), {}))
   task.container = create_container_config(job.container())
 
+  task.labels = labels_to_thrift(job.labels())
+
   numberOfInstances = fully_interpolated(job.instances())
   numberOfConfig = len(fully_interpolated(job.instance_variables()))
   if numberOfConfig > 0 and numberOfInstances != numberOfConfig:

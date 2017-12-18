@@ -88,6 +88,7 @@ public final class DbTaskConfig {
         .setContactEmail(contactEmail)
         .setExecutorConfig(executorConfig)
         .setKillPolicy(killPolicy)
+        .setLabels(labels)
         .setMetadata(ImmutableSet.copyOf(metadata))
         .setInstances(ImmutableList.copyOf(instances))
         .setMesosFetcherUris(ImmutableSet.copyOf(mesosFetcherUris))

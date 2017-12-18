@@ -182,6 +182,7 @@ class MesosJob(Struct):
   lifecycle                  = Default(LifecycleConfig, DefaultLifecycleConfig)
   task_links                 = Map(String, String)  # Unsupported.  See AURORA-739
   instance_variables         = Default(List(Instance), [])
+  labels                     = Default(List(Label), [])
 
   enable_hooks = Default(Boolean, False)  # enable client API hooks; from env python-list 'hooks'
 

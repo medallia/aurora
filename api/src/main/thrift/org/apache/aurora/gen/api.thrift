@@ -308,6 +308,8 @@ struct TaskConfig {
  27: optional set<Metadata> metadata
  /** Instances with variables to Interpolate in the TaskConfig */
  31: optional list<Instance> instances
+ /** Task labels */
+ 34: optional list<Label> labels
  
  // This field is deliberately placed at the end to work around a bug in the immutable wrapper
  // code generator.  See AURORA-1185 for details.
