@@ -115,6 +115,7 @@ Process 'process':
         "max_task_failures": 1,
         "cron_collision_policy": "KILL_EXISTING",
         "enable_hooks": False,
+        "instance_variables": [],
         "instances": 3,
         "task": {
             "processes": [{
@@ -126,7 +127,7 @@ Process 'process':
                 "cmdline": "ls -la",
                 "final": False}],
             "name": "task",
-            "finalization_wait": 30,
+            "finalization_wait": 3600,
             "max_failures": 1,
             "max_concurrency": 0,
             "resources": {
