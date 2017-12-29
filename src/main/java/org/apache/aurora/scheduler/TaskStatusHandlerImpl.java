@@ -38,6 +38,7 @@ import org.apache.aurora.scheduler.stats.CachedCounters;
 import org.apache.aurora.scheduler.storage.Storage;
 import org.apache.aurora.scheduler.storage.Storage.MutateWork.NoResult;
 import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,7 +155,7 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
         storage.write((NoResult.Quiet) storeProvider -> {
           for (TaskStatus status : updates) {
             ScheduleStatus translatedState = Conversions.convertProtoState(status.getState());
-
+            
             StateChangeResult result = stateManager.changeState(
                 storeProvider,
                 status.getTaskId().getValue(),
@@ -212,14 +213,21 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
         case REASON_TASK_CHECK_STATUS_UPDATED:
           message = Optional.of("Task Health Check Status changed: " + status.toString());
           break;
-          
+        
         default:
           // Message is already populated above.
           break;
       }
     }
     
-    // TODO set message if killed by healthcheck 
+    ScheduleStatus translatedState = Conversions.convertProtoState(status.getState());
+    if (translatedState.equals(ScheduleStatus.KILLED) && !status.getHealthy()) {
+      message = Optional.of("Service not Healthy");
+    }
+    // TODO set message if killed by healthcheck
+//    if (!status.getHealthy()) {
+//      message = Optional.of("Image was unhealthy.");
+//    }
 
     return message;
   }

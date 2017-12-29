@@ -14,6 +14,7 @@ import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
 import org.apache.mesos.v1.Protos.DurationInfo;
 import org.apache.mesos.v1.Protos.HealthCheck;
+import org.apache.mesos.v1.Protos.HealthCheck.HTTPCheckInfo;
 import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.TaskInfo.Builder;
 import org.slf4j.Logger;
@@ -36,13 +37,14 @@ public class DockerContainerTasks {
 		// build variable substitutor.
 		InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(task.getTask(),
 				task.getInstanceId());
-
-		 
-				
+		
 		taskBuilder.setHealthCheck(HealthCheck.newBuilder()
-				.setCommand(CommandInfo.newBuilder().setValue("curl www.google.com").build())
+				.setCommand(CommandInfo.newBuilder().setValue("curl -s -S www.google.com >/dev/null").build())
 				.setConsecutiveFailures(3)
-				.setDelaySeconds(5)
+				.setDelaySeconds(10)
+				.setGracePeriodSeconds(20)
+				.setIntervalSeconds(10)
+				.set
 				.build());
 
 		IDockerContainer config = taskConfig.getContainer().getDocker();
