@@ -201,7 +201,8 @@ public interface MesosTaskFactory {
 
         taskBuilder.setExecutor(executorInfoBuilder.build());
       } else if (config.getContainer().isSetDocker()) {
-        DockerContainerTasks.configureTask(task, config, taskBuilder, acceptedOffer, serverInfo);
+        DockerContainerTasks.configureTask(task, taskBuilder, serverInfo);
+        
       } else {
         throw new SchedulerException("Task had no supported container set.");
       }

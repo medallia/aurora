@@ -40,6 +40,8 @@ from gen.apache.aurora.api.ttypes import (
     DockerImage,
     DockerParameter,
     ExecutorConfig,
+    HealthCheck,
+    HttpHealthChecker,
     Identity,
     Instance,
     Image,
@@ -51,6 +53,7 @@ from gen.apache.aurora.api.ttypes import (
     Metadata,
     Mode,
     Resource,
+    ShellHealthChecker,
     TaskConfig,
     TaskConstraint,
     ValueConstraint,
@@ -285,6 +288,7 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       fully_interpolated(task_raw.resources().disk())))
 
   task.killPolicy = KillPolicy(gracePeriodSecs=fully_interpolated(task_raw.finalization_wait()))
+  task.healthCheck = convert_health_check(job.health_check_config())
 
   numCpus = fully_interpolated(task_raw.resources().cpu())
   ramMb = fully_interpolated(task_raw.resources().ram()) / MB
@@ -355,3 +359,19 @@ def convert(job, metadata=frozenset(), ports=frozenset()):
       cronCollisionPolicy=select_cron_policy(job.cron_collision_policy()),
       taskConfig=task,
       instanceCount=numberOfInstances)
+
+def convert_health_check(job_health_check):
+    print ">.HealthCheck: {}\n".format(job_health_check)
+    hc = HealthCheck()
+    hc.grace_period_seconds = fully_interpolated(job_health_check.initial_interval_secs())
+    hc.delaySeconds= fully_interpolated(job_health_check.initial_interval_secs())
+    hc.interval_seconds = fully_interpolated(job_health_check.interval_secs())
+    hc.max_consecutive_failures = fully_interpolated(job_health_check.max_consecutive_failures())
+    if job_health_check.health_checker().http() is not Empty:
+      hc.http = HttpHealthChecker(endpoint=fully_interpolated(job_health_check.health_checker().http().endpoint()))
+    elif job_health_check.health_checker().shell() is not Empty:
+      hc.shell = ShellHealthChecker(command=fully_interpolated(job_health_check.health_checker().shell().shell_command()))
+    else:
+      raise InvalidConfig("Config doesn't contain a valid HealthChecker. Include an http or shell checker.")
+    print "<.HealthCheck: {}\n".format(hc)
+    return hc

@@ -187,7 +187,7 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
     if (status.hasMessage()) {
       message = Optional.of(status.getMessage());
     }
-
+    LOG.info("TaskStatusHandler: " + status);
     if (status.hasReason()) {
       switch (status.getReason()) {
         case REASON_CONTAINER_LIMITATION_MEMORY:
@@ -213,6 +213,11 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
           // Message is already populated above.
           break;
       }
+    }
+
+    ScheduleStatus translatedState = Conversions.convertProtoState(status.getState());
+    if (translatedState.equals(ScheduleStatus.KILLED) && !status.getHealthy()) {
+      message = Optional.of("Service not Healthy");
     }
 
     return message;
