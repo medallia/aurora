@@ -16,7 +16,9 @@ package org.apache.aurora.scheduler.storage.db;
 import com.google.inject.Injector;
 
 import org.apache.aurora.scheduler.storage.AbstractJobUpdateStoreTest;
+import org.junit.Ignore;
 
+@Ignore
 public class JobUpdateStoreTest extends AbstractJobUpdateStoreTest {
   @Override
   protected Injector createStorageInjector() {

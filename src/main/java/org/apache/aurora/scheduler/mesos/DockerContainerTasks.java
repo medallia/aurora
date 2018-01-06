@@ -12,6 +12,7 @@ import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
 import org.apache.mesos.v1.Protos.DurationInfo;
 import org.apache.mesos.v1.Protos.HealthCheck;
+import org.apache.mesos.v1.Protos.HealthCheck.HTTPCheckInfo;
 import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.TaskInfo.Builder;
 import org.slf4j.Logger;
@@ -82,16 +83,22 @@ public class DockerContainerTasks {
 		
 		// set health check
 		if (task.getTask().isSetHealthCheck()) {
-			//"curl -s -S www.google.com >/dev/null"
 			IHealthCheck healthCheck = task.getTask().getHealthCheck();
-			HealthCheck.Builder mesosHealthCheck = HealthCheck.newBuilder();
-
-			mesosHealthCheck.setCommand(CommandInfo.newBuilder().setValue(healthCheck.getShell().getCommand()).build())
+			HealthCheck.Builder mesosHealthCheck = HealthCheck.newBuilder()
 					.setConsecutiveFailures(healthCheck.getConsecutiveFailures())
 					.setDelaySeconds(healthCheck.getDelaySeconds())
 					.setGracePeriodSeconds(healthCheck.getGracePeriodSeconds())
 					.setIntervalSeconds(healthCheck.getIntervalSeconds())
-					.setTimeoutSeconds(healthCheck.getTimeoutSeconds()).build();
+					.setTimeoutSeconds(healthCheck.getTimeoutSeconds());
+			if (healthCheck.isSetShell()) {
+				mesosHealthCheck.setCommand(CommandInfo.newBuilder()
+						.setValue(healthCheck.getShell().getCommand()).build());
+			} else if (healthCheck.isSetHttp()) {
+				mesosHealthCheck.setHttp(HTTPCheckInfo.newBuilder()
+						.setPath(healthCheck.getHttp().getEndpoint())
+						.setPort(healthCheck.getHttp().getPort())
+						.build());
+			}
 			taskBuilder.setHealthCheck(mesosHealthCheck.build());
 		}
 	}

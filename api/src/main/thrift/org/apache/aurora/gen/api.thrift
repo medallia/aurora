@@ -273,27 +273,27 @@ struct HealthCheck {
   // Amount of time to wait to start health checking the task after it
   // transitions to `TASK_RUNNING` or `TASK_STATING` if the latter is
   // used by the executor. [default = 15.0]
-  1: optional double delaySeconds
+  1: optional double delaySeconds = 15
 
   // Interval between health checks, i.e., amount of time to wait after
   // the previous health check finished or timed out to start the next
   // health check. [default = 10.0]
-  2: optional double intervalSeconds
+  2: optional double intervalSeconds = 10
 
   // Amount of time to wait for the health check to complete. After this
   // timeout, the health check is aborted and treated as a failure. Zero
   // means infinite timeout. [default = 20.0]
-  3: optional double timeoutSeconds
+  3: optional double timeoutSeconds = 20
 
   // Number of consecutive failures until the task is killed by the executor. [default = 3]
-  4: optional i32 consecutiveFailures
+  4: optional i32 consecutiveFailures = 3
 
   // Amount of time after the task is launched during which health check
   // failures are ignored. Once a check succeeds for the first time,
   // the grace period does not apply anymore. Note that it includes
   // `delay_seconds`, i.e., setting `grace_period_seconds` < `delay_seconds`
   // has no effect. [default = 10.0]
-  5: optional double gracePeriodSeconds
+  5: optional double gracePeriodSeconds = 10
   
   // HTTP health check
   6: optional HttpHealthChecker http

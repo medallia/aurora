@@ -38,6 +38,7 @@ import org.apache.aurora.scheduler.stats.CachedCounters;
 import org.apache.aurora.scheduler.storage.Storage;
 import org.apache.aurora.scheduler.storage.Storage.MutateWork.NoResult;
 import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,7 +188,7 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
     if (status.hasMessage()) {
       message = Optional.of(status.getMessage());
     }
-    LOG.info("TaskStatusHandler: " + status);
+    LOG.debug("TaskStatusHandler: " + status);
     if (status.hasReason()) {
       switch (status.getReason()) {
         case REASON_CONTAINER_LIMITATION_MEMORY:
