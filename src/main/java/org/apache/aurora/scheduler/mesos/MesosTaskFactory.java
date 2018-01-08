@@ -345,6 +345,11 @@ public interface MesosTaskFactory {
           .setValue(m.getValue())
           .build()));
 
+      config.getLabels().stream().forEach(l -> labelsBuilder.addLabels(Label.newBuilder()
+      .setKey(l.getKey())
+      .setValue(l.getValue())
+      .build()));
+
       taskBuilder.setLabels(labelsBuilder);
     }
 
