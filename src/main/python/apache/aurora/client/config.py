@@ -79,10 +79,6 @@ def _validate_update_config(config):
 
   max_failures = update_config.max_total_failures().get()
   watch_secs = update_config.watch_secs().get()
-  initial_interval_secs = health_check_config.initial_interval_secs().get()
-  max_consecutive_failures = health_check_config.max_consecutive_failures().get()
-  min_consecutive_successes = health_check_config.min_consecutive_successes().get()
-  interval_secs = health_check_config.interval_secs().get()
 
   if max_failures >= job_size:
     die(UPDATE_CONFIG_MAX_FAILURES_ERROR % (job_size, job_size - 1))
@@ -92,17 +88,22 @@ def _validate_update_config(config):
     if max_failures < min_failure_threshold:
       die(UPDATE_CONFIG_DEDICATED_THRESHOLD_ERROR % (job_size, min_failure_threshold))
 
-  params = [
-        (watch_secs, 'watch_secs'),
-        (max_consecutive_failures, 'max_consecutive_failures'),
-        (min_consecutive_successes, 'min_consecutive_successes'),
-        (initial_interval_secs, 'initial_interval_secs'),
-        (interval_secs, 'interval_secs')
-      ]
+  if health_check_config is not Empty:
+    initial_interval_secs = health_check_config.initial_interval_secs().get()
+    max_consecutive_failures = health_check_config.max_consecutive_failures().get()
+    min_consecutive_successes = health_check_config.min_consecutive_successes().get()
+    interval_secs = health_check_config.interval_secs().get()
+    params = [
+          (watch_secs, 'watch_secs'),
+          (max_consecutive_failures, 'max_consecutive_failures'),
+          (min_consecutive_successes, 'min_consecutive_successes'),
+          (initial_interval_secs, 'initial_interval_secs'),
+          (interval_secs, 'interval_secs')
+        ]
 
-  for value, name in params:
-    if value < 0:
-      die(INVALID_VALUE_ERROR_FORMAT % (value, name))
+    for value, name in params:
+      if value < 0:
+        die(INVALID_VALUE_ERROR_FORMAT % (value, name))
 
 
 PRODUCTION_DEPRECATED_WARNING = (

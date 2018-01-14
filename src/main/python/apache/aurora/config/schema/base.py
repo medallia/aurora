@@ -181,7 +181,7 @@ class MesosJob(Struct):
   max_task_failures          = Default(Integer, 1)
   production                 = Default(Boolean, False)
   priority                   = Default(Integer, 0)
-  health_check_config        = Default(HealthCheckConfig, HealthCheckConfig())
+  health_check_config        = HealthCheckConfig #, HealthCheckConfig())
   # TODO(wickman) Make Default(Any, LifecycleConfig()) once pystachio #17 is addressed.
   lifecycle                  = Default(LifecycleConfig, DefaultLifecycleConfig)
   task_links                 = Map(String, String)  # Unsupported.  See AURORA-739

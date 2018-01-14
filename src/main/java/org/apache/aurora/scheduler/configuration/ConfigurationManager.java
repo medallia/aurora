@@ -403,8 +403,8 @@ public class ConfigurationManager {
       throw new TaskDescriptionException("Grace Period should be greater than 0");
     }
     
-    if (config.isSetHealthCheck() && !config.getHealthCheck().isSetHttp() && !config.getHealthCheck().isSetShell()) {
-      throw new TaskDescriptionException("Provide one health checker: http or shell");
+    if (config.isSetHealthCheck() && !(config.getHealthCheck().isSetHttp() ^ config.getHealthCheck().isSetShell())) {
+      throw new TaskDescriptionException("Provide exactly one health checker: http or shell");
     }
 
     maybeFillLinks(builder);
