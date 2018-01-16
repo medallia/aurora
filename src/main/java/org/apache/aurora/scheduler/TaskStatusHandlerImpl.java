@@ -36,9 +36,11 @@ import org.apache.aurora.scheduler.state.StateChangeResult;
 import org.apache.aurora.scheduler.state.StateManager;
 import org.apache.aurora.scheduler.stats.CachedCounters;
 import org.apache.aurora.scheduler.storage.Storage;
+import org.apache.aurora.scheduler.storage.Storage.MutableStoreProvider;
 import org.apache.aurora.scheduler.storage.Storage.MutateWork.NoResult;
+import org.apache.aurora.scheduler.storage.entities.IScheduledTask;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
-import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,7 +163,7 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
                 status.getTaskId().getValue(),
                 Optional.absent(),
                 translatedState,
-                formatMessage(status));
+                formatMessage(status, storeProvider));
 
             if (status.hasReason()) {
               counters.get(statName(status, result)).incrementAndGet();
@@ -183,7 +185,7 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
     return "status_update_" + status.getReason() + "_" + result;
   }
 
-  private static Optional<String> formatMessage(TaskStatus status) {
+  private static Optional<String> formatMessage(TaskStatus status, MutableStoreProvider storeProvider) {
     Optional<String> message = Optional.absent();
     if (status.hasMessage()) {
       message = Optional.of(status.getMessage());
@@ -216,9 +218,12 @@ public class TaskStatusHandlerImpl extends AbstractExecutionThreadService
       }
     }
 
-    ScheduleStatus translatedState = Conversions.convertProtoState(status.getState());
-    if (translatedState.equals(ScheduleStatus.KILLED) && !status.getHealthy()) {
-      message = Optional.of("Service not Healthy");
+    // set the unhealthy message if the task was killed, unhealthy, and has a healthcheck configured.
+    if (TaskState.TASK_KILLED.equals(status.getState()) && !status.getHealthy()) {
+      Optional<IScheduledTask> iScheduledTaskOptional = storeProvider.getTaskStore().fetchTask(status.getTaskId().getValue());
+      if (iScheduledTaskOptional.isPresent() && iScheduledTaskOptional.get().getAssignedTask().getTask().isSetHealthCheck()) {
+        message = Optional.of("Service not Healthy");
+      }
     }
 
     return message;

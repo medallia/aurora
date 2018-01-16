@@ -271,7 +271,7 @@ struct ShellHealthChecker {
 struct HealthCheck {
 
   // Amount of time to wait to start health checking the task after it
-  // transitions to `TASK_RUNNING` or `TASK_STATING` if the latter is
+  // transitions to `TASK_RUNNING` or `TASK_STAGING` if the latter is
   // used by the executor. [default = 15.0]
   1: optional double delaySeconds = 15
 

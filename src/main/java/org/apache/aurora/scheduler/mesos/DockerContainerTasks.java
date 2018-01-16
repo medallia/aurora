@@ -7,6 +7,7 @@ import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
 import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
 import org.apache.aurora.scheduler.storage.entities.IHealthCheck;
 import org.apache.aurora.scheduler.storage.entities.IServerInfo;
+import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
@@ -29,14 +30,16 @@ public class DockerContainerTasks {
 			IAssignedTask task,
 			Builder taskBuilder,
 			IServerInfo serverInfo) {
-		LOG.info("Setting DOCKER Task. {}. Instances {}", task.getTask().getExecutorConfig().getData(), 
-				task.getTask().getInstances());
+
+		ITaskConfig taskConfig = task.getTask();
+		LOG.info("Setting DOCKER Task. {}. Instances {}", taskConfig.getExecutorConfig().getData(), 
+				taskConfig.getInstances());
 
 		// build variable substitutor.
-		InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(task.getTask(),
+		InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(taskConfig,
 				task.getInstanceId());
 
-		IDockerContainer config = task.getTask().getContainer().getDocker();
+		IDockerContainer config = taskConfig.getContainer().getDocker();
 		Iterable<Protos.Parameter> parameters = instanceVariablesSubstitutor.getDockerParameters();
 
 		ContainerInfo.DockerInfo.Builder dockerBuilder = ContainerInfo.DockerInfo.newBuilder()
@@ -50,7 +53,7 @@ public class DockerContainerTasks {
 		ImmutableMap<String, String> envVariables = ImmutableMap.of(
 				"AURORA_TASK_ID", task.getTaskId(),
 				"AURORA_TASK_INSTANCE", Integer.toString(task.getInstanceId()),
-				"AURORA_JOB_NAME", task.getTask().getJob().getName(),
+				"AURORA_JOB_NAME", taskConfig.getJob().getName(),
 				"AURORA_CLUSTER", serverInfo.getClusterName());
 
 		envVariables.forEach((name, value) ->
@@ -74,16 +77,16 @@ public class DockerContainerTasks {
 		taskBuilder.setCommand(cmd.build());
 
 		// set kill policy
-		if (task.getTask().isSetKillPolicy()) {
-			long killGracePeriodNanos = Duration.ofSeconds(task.getTask().getKillPolicy().getGracePeriodSecs()).toNanos();
+		if (taskConfig.isSetKillPolicy()) {
+			long killGracePeriodNanos = Duration.ofSeconds(taskConfig.getKillPolicy().getGracePeriodSecs()).toNanos();
 			KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
 					.setGracePeriod(DurationInfo.newBuilder().setNanoseconds(killGracePeriodNanos).build());
 			taskBuilder.setKillPolicy(killPolicyBuilder.build());
 		}
 		
 		// set health check
-		if (task.getTask().isSetHealthCheck()) {
-			IHealthCheck healthCheck = task.getTask().getHealthCheck();
+		if (taskConfig.isSetHealthCheck()) {
+			IHealthCheck healthCheck = taskConfig.getHealthCheck();
 			HealthCheck.Builder mesosHealthCheck = HealthCheck.newBuilder()
 					.setConsecutiveFailures(healthCheck.getConsecutiveFailures())
 					.setDelaySeconds(healthCheck.getDelaySeconds())

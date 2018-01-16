@@ -51,6 +51,7 @@ import org.apache.aurora.scheduler.base.JobKeys;
 import org.apache.aurora.scheduler.base.TaskTestUtil;
 import org.apache.aurora.scheduler.storage.Storage.MutateWork.NoResult;
 import org.apache.aurora.scheduler.storage.Storage.StorageException;
+import org.apache.aurora.scheduler.storage.entities.IHealthCheck;
 import org.apache.aurora.scheduler.storage.entities.IJobInstanceUpdateEvent;
 import org.apache.aurora.scheduler.storage.entities.IJobKey;
 import org.apache.aurora.scheduler.storage.entities.IJobUpdate;
@@ -155,7 +156,8 @@ public abstract class AbstractJobUpdateStoreTest {
         StorageEntityUtil.getField(JobUpdateSummary.class, "state"),
         StorageEntityUtil.getField(IJobUpdateSummary.class, "state"),
         StorageEntityUtil.getField(Range.class, "first"),
-        StorageEntityUtil.getField(Range.class, "last"));
+        StorageEntityUtil.getField(Range.class, "last"),
+        StorageEntityUtil.getField(IHealthCheck.class, "http"));
     saveUpdate(update1, Optional.of("lock1"));
     assertUpdate(update1);
 
@@ -193,7 +195,8 @@ public abstract class AbstractJobUpdateStoreTest {
         StorageEntityUtil.getField(JobUpdateSummary.class, "state"),
         StorageEntityUtil.getField(IJobUpdateSummary.class, "state"),
         StorageEntityUtil.getField(Range.class, "first"),
-        StorageEntityUtil.getField(Range.class, "last"));
+        StorageEntityUtil.getField(Range.class, "last"),
+        StorageEntityUtil.getField(IHealthCheck.class, "http"));
     saveUpdate(update, Optional.of("lock1"));
     assertUpdate(update);
   }

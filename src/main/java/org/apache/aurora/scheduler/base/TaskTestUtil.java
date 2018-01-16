@@ -28,7 +28,6 @@ import org.apache.aurora.gen.Container._Fields;
 import org.apache.aurora.gen.DockerContainer;
 import org.apache.aurora.gen.DockerParameter;
 import org.apache.aurora.gen.HealthCheck;
-import org.apache.aurora.gen.HttpHealthChecker;
 import org.apache.aurora.gen.Identity;
 import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.KillPolicy;
@@ -158,7 +157,7 @@ public final class TaskTestUtil {
             Resource.diskMb(1024),
             Resource.namedPort("http")))
         .setKillPolicy(new KillPolicy(1L))
-        .setHealthCheck(new HealthCheck().setHttp(new HttpHealthChecker("/health", 8080)).setShell(new ShellHealthChecker("ping localhost"))));
+        .setHealthCheck(new HealthCheck().setShell(new ShellHealthChecker("ping localhost"))));
   }
 
   public static IScheduledTask makeTask(String id, IJobKey job) {

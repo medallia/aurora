@@ -40,7 +40,6 @@ import static org.apache.aurora.gen.ScheduleStatus.FAILED;
 import static org.apache.aurora.gen.ScheduleStatus.KILLED;
 import static org.apache.aurora.gen.ScheduleStatus.RUNNING;
 import static org.apache.aurora.scheduler.TaskStatusHandlerImpl.statName;
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.junit.Assert.assertEquals;
@@ -220,7 +219,8 @@ public class TaskStatusHandlerImplTest extends EasyMockTest {
 
   @Test
   public void testSuppressUnregisteredExecutorMessage() throws Exception {
-    storageUtil.expectWrite();
+    storageUtil.expectOperations();
+    storageUtil.expectTaskFetch(TASK_ID_A); // we inspect the task healthcheck to overwrite the kill message 
 
     TaskStatus status = TaskStatus.newBuilder()
         .setState(TaskState.TASK_KILLED)
@@ -234,7 +234,7 @@ public class TaskStatusHandlerImplTest extends EasyMockTest {
         TASK_ID_A,
         Optional.absent(),
         KILLED,
-        Optional.of("Service not Healthy")))
+        Optional.absent()))
         .andReturn(StateChangeResult.SUCCESS);
 
     CountDownLatch latch = new CountDownLatch(1);

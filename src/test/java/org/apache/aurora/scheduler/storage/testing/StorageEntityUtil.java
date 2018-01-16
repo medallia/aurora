@@ -40,6 +40,7 @@ public final class StorageEntityUtil {
   }
 
   private static void assertFullyPopulated(String name, Object object, Set<Field> ignoredFields) {
+    System.out.printf("%s - %s%n", name, object);
     if (object instanceof Collection) {
       Object[] values = ((Collection<?>) object).toArray();
       assertFalse("Collection is empty: " + name, values.length == 0);
