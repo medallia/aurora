@@ -79,6 +79,8 @@ def _validate_update_config(config):
 
   max_failures = update_config.max_total_failures().get()
   watch_secs = update_config.watch_secs().get()
+  if watch_secs < 0:
+    die(INVALID_VALUE_ERROR_FORMAT % (watch_secs, 'watch_secs'))
 
   if max_failures >= job_size:
     die(UPDATE_CONFIG_MAX_FAILURES_ERROR % (job_size, job_size - 1))
@@ -94,7 +96,6 @@ def _validate_update_config(config):
     min_consecutive_successes = health_check_config.min_consecutive_successes().get()
     interval_secs = health_check_config.interval_secs().get()
     params = [
-          (watch_secs, 'watch_secs'),
           (max_consecutive_failures, 'max_consecutive_failures'),
           (min_consecutive_successes, 'min_consecutive_successes'),
           (initial_interval_secs, 'initial_interval_secs'),
