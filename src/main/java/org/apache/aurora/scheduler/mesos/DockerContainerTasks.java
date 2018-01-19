@@ -25,7 +25,7 @@ import java.time.Duration;
 public class DockerContainerTasks {
     private static final Logger LOG = LoggerFactory.getLogger(DockerContainerTasks.class);
 
-	/** Configure the {@link Builder} based on the given {@link org.apache.aurora.scheduler.storage.entities.IAssignedTask */
+	/** Configure the {@link Builder} based on the given {@link org.apache.aurora.scheduler.storage.entities.IAssignedTask} */
 	public static void configureTask(
 			IAssignedTask task,
 			Builder taskBuilder,
