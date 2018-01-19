@@ -90,17 +90,6 @@ Process 'process':
           'job', 'inspect', '--write-json', 'west/bozo/test/hello', 'config.aurora']) == 0
     output = {
         "environment": "test",
-        "health_check_config": {
-            "initial_interval_secs": 15.0,
-            "health_checker": {
-                "http": {
-                    "expected_response_code": 0,
-                    "endpoint": "/health",
-                    "expected_response": "ok"}},
-            "interval_secs": 10.0,
-            "timeout_secs": 1.0,
-            "max_consecutive_failures": 0,
-            "min_consecutive_successes": 1},
         "cluster": "west",
         "cron_schedule": "* * * * *",
         "service": False,

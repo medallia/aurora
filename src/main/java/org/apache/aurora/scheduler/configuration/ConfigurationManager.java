@@ -402,6 +402,10 @@ public class ConfigurationManager {
     if (config.isSetKillPolicy() && config.getKillPolicy().getGracePeriodSecs() < 0) {
       throw new TaskDescriptionException("Grace Period should be greater than 0");
     }
+    
+    if (config.isSetHealthCheck() && !(config.getHealthCheck().isSetHttp() ^ config.getHealthCheck().isSetShell())) {
+      throw new TaskDescriptionException("Provide exactly one health checker: http or shell");
+    }
 
     maybeFillLinks(builder);
 

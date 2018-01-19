@@ -78,6 +78,7 @@ import org.apache.aurora.scheduler.storage.entities.IScheduledTask;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.aurora.scheduler.storage.mem.MemStorageModule;
 import org.apache.aurora.scheduler.testing.FakeStatsProvider;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.apache.aurora.common.util.testing.FakeBuildInfo.generateBuildInfo;
@@ -141,7 +142,7 @@ public class SnapshotStoreImplIT {
     assertSnapshotSaveStats(2L);
   }
 
-  @Test
+  @Test @Ignore
   public void testMigrateFromDBStores() {
     // Produce a snapshot from DbStorage, populating the dbScript field.
     Injector injector = DbUtil.createStorageInjector(DbModule.testModuleWithWorkQueue());
