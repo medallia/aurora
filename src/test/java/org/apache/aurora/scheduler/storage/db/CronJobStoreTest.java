@@ -22,7 +22,9 @@ import org.apache.aurora.common.util.Clock;
 import org.apache.aurora.common.util.testing.FakeClock;
 import org.apache.aurora.scheduler.storage.AbstractCronJobStoreTest;
 import org.apache.aurora.scheduler.testing.FakeStatsProvider;
+import org.junit.Ignore;
 
+@Ignore
 public class CronJobStoreTest extends AbstractCronJobStoreTest {
   @Override
   protected Module getStorageModule() {

@@ -22,7 +22,9 @@ import org.apache.aurora.common.util.Clock;
 import org.apache.aurora.common.util.testing.FakeClock;
 import org.apache.aurora.scheduler.storage.AbstractTaskStoreTest;
 import org.apache.aurora.scheduler.testing.FakeStatsProvider;
+import org.junit.Ignore;
 
+@Ignore
 public class TaskStoreTest extends AbstractTaskStoreTest {
   @Override
   protected Module getStorageModule() {

@@ -3,15 +3,17 @@ package org.apache.aurora.scheduler.mesos;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import org.apache.aurora.scheduler.configuration.InstanceVariablesSubstitutor;
-import org.apache.aurora.scheduler.resources.AcceptedOffer;
 import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
 import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
+import org.apache.aurora.scheduler.storage.entities.IHealthCheck;
 import org.apache.aurora.scheduler.storage.entities.IServerInfo;
 import org.apache.aurora.scheduler.storage.entities.ITaskConfig;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
 import org.apache.mesos.v1.Protos.DurationInfo;
+import org.apache.mesos.v1.Protos.HealthCheck;
+import org.apache.mesos.v1.Protos.HealthCheck.HTTPCheckInfo;
 import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.TaskInfo.Builder;
 import org.slf4j.Logger;
@@ -23,16 +25,18 @@ import java.time.Duration;
 public class DockerContainerTasks {
     private static final Logger LOG = LoggerFactory.getLogger(DockerContainerTasks.class);
 
+	/** Configure the {@link Builder} based on the given {@link org.apache.aurora.scheduler.storage.entities.IAssignedTask} */
 	public static void configureTask(
 			IAssignedTask task,
-			ITaskConfig taskConfig,
 			Builder taskBuilder,
-			AcceptedOffer acceptedOffer, IServerInfo serverInfo) {
-		LOG.info("Setting DOCKER Task. {}", taskConfig.getExecutorConfig().getData());
-		LOG.info("Instance. {}", taskConfig.getInstances());
+			IServerInfo serverInfo) {
+
+		ITaskConfig taskConfig = task.getTask();
+		LOG.info("Setting DOCKER Task. {}. Instances {}", taskConfig.getExecutorConfig().getData(), 
+				taskConfig.getInstances());
 
 		// build variable substitutor.
-		InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(task.getTask(),
+		InstanceVariablesSubstitutor instanceVariablesSubstitutor = InstanceVariablesSubstitutor.getInstance(taskConfig,
 				task.getInstanceId());
 
 		IDockerContainer config = taskConfig.getContainer().getDocker();
@@ -49,7 +53,7 @@ public class DockerContainerTasks {
 		ImmutableMap<String, String> envVariables = ImmutableMap.of(
 				"AURORA_TASK_ID", task.getTaskId(),
 				"AURORA_TASK_INSTANCE", Integer.toString(task.getInstanceId()),
-				"AURORA_JOB_NAME", task.getTask().getJob().getName(),
+				"AURORA_JOB_NAME", taskConfig.getJob().getName(),
 				"AURORA_CLUSTER", serverInfo.getClusterName());
 
 		envVariables.forEach((name, value) ->
@@ -78,6 +82,27 @@ public class DockerContainerTasks {
 			KillPolicy.Builder killPolicyBuilder = KillPolicy.newBuilder()
 					.setGracePeriod(DurationInfo.newBuilder().setNanoseconds(killGracePeriodNanos).build());
 			taskBuilder.setKillPolicy(killPolicyBuilder.build());
+		}
+		
+		// set health check
+		if (taskConfig.isSetHealthCheck()) {
+			IHealthCheck healthCheck = taskConfig.getHealthCheck();
+			HealthCheck.Builder mesosHealthCheck = HealthCheck.newBuilder()
+					.setConsecutiveFailures(healthCheck.getConsecutiveFailures())
+					.setDelaySeconds(healthCheck.getDelaySeconds())
+					.setGracePeriodSeconds(healthCheck.getGracePeriodSeconds())
+					.setIntervalSeconds(healthCheck.getIntervalSeconds())
+					.setTimeoutSeconds(healthCheck.getTimeoutSeconds());
+			if (healthCheck.isSetShell()) {
+				mesosHealthCheck.setCommand(CommandInfo.newBuilder()
+						.setValue(healthCheck.getShell().getCommand()).build());
+			} else if (healthCheck.isSetHttp()) {
+				mesosHealthCheck.setHttp(HTTPCheckInfo.newBuilder()
+						.setPath(healthCheck.getHttp().getEndpoint())
+						.setPort(healthCheck.getHttp().getPort())
+						.build());
+			}
+			taskBuilder.setHealthCheck(mesosHealthCheck.build());
 		}
 	}
 

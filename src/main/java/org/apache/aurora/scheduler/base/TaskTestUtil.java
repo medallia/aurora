@@ -27,6 +27,7 @@ import org.apache.aurora.gen.Container;
 import org.apache.aurora.gen.Container._Fields;
 import org.apache.aurora.gen.DockerContainer;
 import org.apache.aurora.gen.DockerParameter;
+import org.apache.aurora.gen.HealthCheck;
 import org.apache.aurora.gen.Identity;
 import org.apache.aurora.gen.Instance;
 import org.apache.aurora.gen.KillPolicy;
@@ -36,6 +37,7 @@ import org.apache.aurora.gen.Metadata;
 import org.apache.aurora.gen.Resource;
 import org.apache.aurora.gen.ScheduleStatus;
 import org.apache.aurora.gen.ScheduledTask;
+import org.apache.aurora.gen.ShellHealthChecker;
 import org.apache.aurora.gen.TaskConfig;
 import org.apache.aurora.gen.TaskConstraint;
 import org.apache.aurora.gen.TaskEvent;
@@ -154,7 +156,8 @@ public final class TaskTestUtil {
             Resource.ramMb(1024),
             Resource.diskMb(1024),
             Resource.namedPort("http")))
-        .setKillPolicy(new KillPolicy(1L)));
+        .setKillPolicy(new KillPolicy(1L))
+        .setHealthCheck(new HealthCheck().setShell(new ShellHealthChecker("ping localhost"))));
   }
 
   public static IScheduledTask makeTask(String id, IJobKey job) {
