@@ -1,7 +1,9 @@
 package org.apache.aurora.scheduler.mesos;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import org.apache.aurora.scheduler.base.JobKeys;
 import org.apache.aurora.scheduler.configuration.InstanceVariablesSubstitutor;
 import org.apache.aurora.scheduler.storage.entities.IAssignedTask;
 import org.apache.aurora.scheduler.storage.entities.IDockerContainer;
@@ -53,6 +55,10 @@ public class DockerContainerTasks {
 		ImmutableMap<String, String> envVariables = ImmutableMap.of(
 				"AURORA_TASK_ID", task.getTaskId(),
 				"AURORA_TASK_INSTANCE", Integer.toString(task.getInstanceId()),
+				"AURORA_JOB", Joiner.on('/').join(
+						serverInfo.getClusterName(),
+						JobKeys.canonicalString(taskConfig.getJob()),
+						task.getInstanceId()),
 				"AURORA_JOB_NAME", taskConfig.getJob().getName(),
 				"AURORA_CLUSTER", serverInfo.getClusterName());
 
