@@ -65,9 +65,6 @@ public class DockerContainerTasks {
 		String command = instanceVariablesSubstitutor.getCmdLine();
 		LOG.info("Using CMD: {}", command);
 
-		// add resources
-		cmd.addUris(CommandInfo.URI.newBuilder().setValue("file:///root/.dockercfg").build());
-		
 		if (!Strings.isNullOrEmpty(command)) {
 			cmd.setValue(command).setShell(true);
 		} else {
