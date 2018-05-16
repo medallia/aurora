@@ -65,7 +65,6 @@ public class DockerContainerTasks {
 		String command = instanceVariablesSubstitutor.getCmdLine();
 		LOG.info("Using CMD: {}", command);
 
-		// add resources
 		if (!Strings.isNullOrEmpty(command)) {
 			cmd.setValue(command).setShell(true);
 		} else {
