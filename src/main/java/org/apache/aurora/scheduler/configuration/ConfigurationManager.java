@@ -13,6 +13,7 @@
  */
 package org.apache.aurora.scheduler.configuration;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
