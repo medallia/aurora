@@ -55,7 +55,7 @@ final class ConstraintMatcher {
 
     // If we have specified { dedicated: */* } then the dedicated attribute should not be considered
     if (constraint.getName().equals(DEDICATED_ATTRIBUTE) && constraint.getConstraint().getValue().getValues().contains("*/*")) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Iterable<IAttribute> sameNameAttributes =
