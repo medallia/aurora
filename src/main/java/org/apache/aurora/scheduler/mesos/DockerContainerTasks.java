@@ -50,11 +50,14 @@ public class DockerContainerTasks {
 
 		Protos.Environment.Builder envBuilder = Protos.Environment.newBuilder();
 
-		ImmutableMap<String, String> envVariables = ImmutableMap.of(
-				"AURORA_TASK_ID", task.getTaskId(),
-				"AURORA_TASK_INSTANCE", Integer.toString(task.getInstanceId()),
-				"AURORA_JOB_NAME", taskConfig.getJob().getName(),
-				"AURORA_CLUSTER", serverInfo.getClusterName());
+		ImmutableMap<String, String> envVariables = ImmutableMap.<String, String>builder()
+				.put("AURORA_TASK_ID", task.getTaskId())
+				.put("AURORA_TASK_INSTANCE", Integer.toString(task.getInstanceId()))
+				.put("AURORA_JOB_NAME", taskConfig.getJob().getName())
+				.put("AURORA_CLUSTER", serverInfo.getClusterName())
+				.put("AURORA_ROLE", taskConfig.getJob().getRole())
+				.put("AURORA_ENVIRONMENT", taskConfig.getJob().getEnvironment())
+				.build();
 
 		envVariables.forEach((name, value) ->
 				envBuilder.addVariables(Protos.Environment.Variable.newBuilder().setName(name).setValue(value).build()));
